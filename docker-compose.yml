@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: oposit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oposiciones
+      POSTGRES_PASSWORD: oposiciones2026
+      POSTGRES_DB: oposiciones_flashcards
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_ES.UTF-8"
+    ports:
+      - "5435:5432"  # Puerto 5435 en host → 5432 en container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d  # Scripts de inicialización
+    networks:
+      - oposit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oposiciones -d oposiciones_flashcards"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: oposit-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Puerto 6380 en host → 6379 en container
+    volumes:
+      - redis_data:/data
+    networks:
+      - oposit-network
+    command: redis-server --appendonly yes --requirepass oposiciones2026
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Opcional: pgAdmin para gestión visual de PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: oposit-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@oposiciones.local
+      PGADMIN_DEFAULT_PASSWORD: admin2026
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - oposit-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  oposit-network:
+    driver: bridge
