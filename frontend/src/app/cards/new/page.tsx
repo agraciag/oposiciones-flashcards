@@ -30,7 +30,7 @@ export default function NewCardPage() {
 
   const fetchDecks = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/decks/");
+      const response = await fetch("http://localhost:7999/api/decks/");
       const data = await response.json();
       setDecks(data);
       if (data.length > 0) {
@@ -48,7 +48,7 @@ export default function NewCardPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/flashcards/", {
+      const response = await fetch("http://localhost:7999/api/flashcards/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

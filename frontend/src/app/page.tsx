@@ -29,7 +29,7 @@ export default function Home() {
 
   const fetchDecks = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/decks/");
+      const response = await fetch("http://localhost:7999/api/decks/");
       const data = await response.json();
       setDecks(data);
     } catch (error) {
@@ -41,7 +41,7 @@ export default function Home() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/study/stats");
+      const response = await fetch("http://localhost:7999/api/study/stats");
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -170,7 +170,7 @@ export default function Home() {
 
         {/* API Status */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          API Backend: http://localhost:8000
+          API Backend: http://localhost:7999
         </div>
       </div>
     </main>

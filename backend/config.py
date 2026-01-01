@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Configuración global"""
 
     # Database
-    DATABASE_URL: str = "postgresql://oposiciones:oposiciones@localhost:5432/oposiciones_flashcards"
+    DATABASE_URL: str = "postgresql://oposiciones:oposiciones@localhost:5399/oposiciones_flashcards"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"

@@ -30,7 +30,7 @@ export default function StudyPage() {
     setLoading(true);
     setShowAnswer(false);
     try {
-      const response = await fetch("http://localhost:8000/api/study/next");
+      const response = await fetch("http://localhost:7999/api/study/next");
       const data = await response.json();
 
       if (data === null) {
@@ -53,7 +53,7 @@ export default function StudyPage() {
     setStudying(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/study/review", {
+      const response = await fetch("http://localhost:7999/api/study/review", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

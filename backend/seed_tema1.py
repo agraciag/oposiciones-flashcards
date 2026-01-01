@@ -6,7 +6,7 @@ Artículos 14-29: Derechos Fundamentales y Libertades Públicas
 import requests
 import json
 
-API_URL = "http://localhost:8000/api"
+API_URL = "http://localhost:7999/api"
 
 # Primero, crear el deck si no existe
 def create_deck():
@@ -174,5 +174,5 @@ if __name__ == "__main__":
 
     if created > 0:
         print(f"\n🎉 ¡Listo! Puedes empezar a estudiar en:")
-        print(f"   - Web: http://localhost:3000/study")
-        print(f"   - API: http://localhost:8000/api/study/next")
+        print(f"   - Web: http://localhost:2998/study")
+        print(f"   - API: http://localhost:7999/api/study/next")

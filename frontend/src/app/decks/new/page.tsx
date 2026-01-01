@@ -17,7 +17,7 @@ export default function NewDeckPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/decks/", {
+      const response = await fetch("http://localhost:7999/api/decks/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -32,18 +32,18 @@ python3 bot.py
 ### 💻 2. Interfaz Web (Recomendado para PC)
 ```bash
 # Frontend ya corriendo en:
-http://localhost:3000
+http://localhost:2998
 
 # Accede a:
-# - Dashboard: http://localhost:3000
-# - Estudiar: http://localhost:3000/study
-# - Crear tarjeta: http://localhost:3000/cards/new
+# - Dashboard: http://localhost:2998
+# - Estudiar: http://localhost:2998/study
+# - Crear tarjeta: http://localhost:2998/cards/new
 ```
 
 ### 🔧 3. API REST (Para desarrolladores)
 ```bash
 # Ver docs interactivas:
-http://localhost:8000/docs
+http://localhost:7999/docs
 
 # Endpoints:
 GET  /api/study/next        # Obtener siguiente flashcard
@@ -67,9 +67,9 @@ docker compose up -d
 ```
 
 Esto inicia:
-- **PostgreSQL** en puerto `5435`
-- **Redis** en puerto `6380`
-- **pgAdmin** en `http://localhost:5050` (opcional, para gestión visual)
+- **PostgreSQL** en puerto `5399`
+- **Redis** en puerto `6379`
+- **pgAdmin** en `http://localhost:5049` (opcional, para gestión visual)
 
 ### 2. Instalar dependencias backend
 
@@ -111,9 +111,9 @@ python main.py
 ```
 
 Backend disponible en:
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- Redoc: http://localhost:8000/redoc
+- API: http://localhost:7999
+- Docs: http://localhost:7999/docs
+- Redoc: http://localhost:7999/redoc
 
 ---
 
@@ -136,11 +136,21 @@ make status        # Ver estado servicios
 
 ## 🔧 Configuración
 
+### Puertos de la Aplicación
+
+```
+Frontend (Next.js):  http://localhost:2998
+Backend API (FastAPI): http://localhost:7999
+PostgreSQL:          localhost:5399
+Redis:               localhost:6379
+pgAdmin:             http://localhost:5049
+```
+
 ### Credenciales PostgreSQL
 
 ```
 Host: localhost
-Port: 5435
+Port: 5399
 Usuario: oposiciones
 Password: oposiciones2026
 Database: oposiciones_flashcards
@@ -150,14 +160,14 @@ Database: oposiciones_flashcards
 
 ```
 Host: localhost
-Port: 6380
+Port: 6379
 Password: oposiciones2026
 ```
 
 ### Credenciales pgAdmin
 
 ```
-URL: http://localhost:5050
+URL: http://localhost:5049
 Email: admin@oposiciones.local
 Password: admin2026
 ```
@@ -282,19 +292,75 @@ SELECT * FROM flashcards LIMIT 10;
 
 ---
 
+## 🌐 Exponer con Cloudflare Tunnel
+
+OpositApp está configurado para ser accesible públicamente vía Cloudflare Tunnel. Ambos servicios ya escuchan en `0.0.0.0` para permitir acceso externo.
+
+### Configuración Actual
+
+✅ **Frontend Next.js**: Configurado en `0.0.0.0:2998`
+✅ **Backend FastAPI**: Configurado en `0.0.0.0:7999`
+
+### Pasos para Exponer con Cloudflare
+
+1. **Configura tu túnel de Cloudflare** con `extra_hosts`:
+   ```yaml
+   services:
+     tunnel:
+       image: cloudflare/cloudflared
+       extra_hosts:
+         - "host.docker.internal:host-gateway"
+   ```
+
+2. **En Cloudflare Zero Trust**, añade Public Hostnames:
+
+   **Frontend:**
+   - Service Type: `HTTP`
+   - URL: `http://host.docker.internal:2998`
+   - Public Hostname: `oposit.tudominio.com`
+
+   **Backend API:**
+   - Service Type: `HTTP`
+   - URL: `http://host.docker.internal:7999`
+   - Public Hostname: `api-oposit.tudominio.com`
+
+3. **Actualiza CORS en `backend/.env`**:
+   ```env
+   ALLOWED_ORIGINS=http://localhost:2998,http://localhost:7999,https://oposit.tudominio.com,https://api-oposit.tudominio.com
+   ```
+
+4. **Reinicia el backend** para aplicar cambios de CORS:
+   ```bash
+   cd backend
+   python main.py
+   ```
+
+### Documentación Completa
+
+Ver [CLOUDFLARE_WSL_SETUP.md](./CLOUDFLARE_WSL_SETUP.md) para:
+- Configuración detallada de túneles
+- Ejemplos para otros frameworks
+- Checklist de configuración
+- Troubleshooting específico de Cloudflare
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Puerto ocupado
 
-Si `5435` o `6380` están ocupados, edita `docker-compose.yml`:
+Si `5399`, `6379` o `5049` están ocupados, edita `docker-compose.yml`:
 ```yaml
 ports:
-  - "PUERTO_NUEVO:5432"  # Cambia PUERTO_NUEVO
+  - "PUERTO_NUEVO:5432"  # Para PostgreSQL
+  - "PUERTO_NUEVO:6379"  # Para Redis
+  - "PUERTO_NUEVO:80"    # Para pgAdmin
 ```
 
 Y actualiza `backend/.env`:
 ```
 DATABASE_URL=postgresql://oposiciones:oposiciones2026@localhost:PUERTO_NUEVO/oposiciones_flashcards
+REDIS_URL=redis://:oposiciones2026@localhost:PUERTO_NUEVO
 ```
 
 ### Recrear base de datos
