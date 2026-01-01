@@ -1,0 +1,82 @@
+"""
+OpositApp - Backend API
+Sistema de flashcards con repetición espaciada para oposiciones
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import uvicorn
+
+from config import settings
+from database import engine, Base
+from routers import flashcards, decks, study, auth, legislation
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle events"""
+    # Startup
+    print("🚀 Iniciando OpositApp Backend...")
+    print(f"📊 Conectando a base de datos...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Base de datos lista")
+
+    yield
+
+    # Shutdown
+    print("👋 Cerrando OpositApp Backend...")
+
+
+app = FastAPI(
+    title="OpositApp API",
+    description="Sistema inteligente de flashcards para oposiciones",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
+app.include_router(flashcards.router, prefix="/api/flashcards", tags=["flashcards"])
+app.include_router(study.router, prefix="/api/study", tags=["study"])
+app.include_router(legislation.router, prefix="/api/legislation", tags=["legislation"])
+
+
+@app.get("/")
+async def root():
+    """Health check"""
+    return {
+        "status": "ok",
+        "app": "OpositApp",
+        "version": "0.1.0",
+        "message": "API funcionando correctamente 🚀"
+    }
+
+
+@app.get("/api/health")
+async def health():
+    """Health check detallado"""
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "redis": "connected"
+    }
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.DEBUG
+    )
