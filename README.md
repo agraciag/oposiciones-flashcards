@@ -274,13 +274,17 @@ make logs-redis        # Solo Redis
 
 ## 📅 Roadmap
 
-### ✅ FASE 1: Backend Core (Semana 1)
+### ✅ FASE 1: Backend Core - COMPLETADA (1 enero 2026)
 - [x] Estructura proyecto
 - [x] Modelos de base de datos
-- [x] Algoritmo SM-2
-- [x] API CRUD básica
-- [x] Docker Compose setup
-- [ ] Tests unitarios
+- [x] Algoritmo SM-2 implementado y probado
+- [x] API CRUD completa funcionando
+- [x] Docker Compose setup (PostgreSQL + Redis + pgAdmin)
+- [x] Tablas BD creadas
+- [x] Primera flashcard creada y revisada con SM-2
+- [x] Sistema de tracking con study logs
+- [x] Repositorio en GitHub: https://github.com/agraciag/oposiciones-flashcards
+- [ ] Tests unitarios (próximamente)
 
 ### 🔄 FASE 2: Telegram Bot (Semana 2)
 - [ ] Setup bot
