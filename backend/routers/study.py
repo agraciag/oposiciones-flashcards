@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from database import get_db
@@ -14,6 +14,11 @@ from models import Flashcard, StudySession, StudyLog
 from sm2 import calculate_sm2
 
 router = APIRouter()
+
+
+def utc_now():
+    """Helper para obtener datetime con timezone UTC"""
+    return datetime.now(timezone.utc)
 
 
 class StudyQuality(str, Enum):
@@ -60,7 +65,7 @@ class FlashcardStudy(BaseModel):
 @router.get("/next", response_model=FlashcardStudy | None)
 def get_next_flashcard(deck_id: int | None = None, db: Session = Depends(get_db)):
     """Obtener siguiente flashcard para estudiar"""
-    query = db.query(Flashcard).filter(Flashcard.next_review <= datetime.now())
+    query = db.query(Flashcard).filter(Flashcard.next_review <= utc_now())
 
     if deck_id:
         query = query.filter(Flashcard.deck_id == deck_id)
@@ -108,14 +113,14 @@ def review_flashcard(review: StudyRequest, session_id: int | None = None, db: Se
     flashcard.repetitions = result['repetitions']
     flashcard.easiness_factor = result['easiness']
     flashcard.interval_days = result['interval']
-    flashcard.next_review = datetime.now() + timedelta(days=result['interval'])
+    flashcard.next_review = utc_now() + timedelta(days=result['interval'])
 
     # Crear o obtener sesión de estudio
     if not session_id:
         # Crear sesión temporal para testing
         study_session = StudySession(
             user_id=1,  # Usuario de prueba
-            started_at=datetime.now()
+            started_at=utc_now()
         )
         db.add(study_session)
         db.flush()  # Para obtener el ID sin hacer commit
@@ -134,7 +139,7 @@ def review_flashcard(review: StudyRequest, session_id: int | None = None, db: Se
         easiness_after=result['easiness'],
         interval_after=result['interval'],
         next_review_after=flashcard.next_review,
-        reviewed_at=datetime.now()
+        reviewed_at=utc_now()
     )
     db.add(study_log)
 
@@ -159,7 +164,7 @@ def get_study_stats(deck_id: int | None = None, db: Session = Depends(get_db)):
         query = query.filter(Flashcard.deck_id == deck_id)
 
     total_cards = query.count()
-    cards_to_review = query.filter(Flashcard.next_review <= datetime.now()).count()
+    cards_to_review = query.filter(Flashcard.next_review <= utc_now()).count()
     cards_learning = query.filter(Flashcard.repetitions < 3).count()
     cards_mastered = query.filter(Flashcard.repetitions >= 3).count()
 
