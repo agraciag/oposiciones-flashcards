@@ -41,6 +41,16 @@ class FlashcardResponse(BaseModel):
         from_attributes = True
 
 
+class FlashcardUpdate(BaseModel):
+    """Schema para actualizar flashcard"""
+    front: str | None = None
+    back: str | None = None
+    tags: str | None = None
+    legal_reference: str | None = None
+    article_number: str | None = None
+    law_name: str | None = None
+
+
 @router.post("/", response_model=FlashcardResponse)
 def create_flashcard(flashcard: FlashcardCreate, db: Session = Depends(get_db)):
     """Crear nueva flashcard"""
@@ -54,3 +64,59 @@ def create_flashcard(flashcard: FlashcardCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_flashcard)
     return db_flashcard
+
+
+@router.get("/", response_model=List[FlashcardResponse])
+def get_flashcards(
+    skip: int = 0, 
+    limit: int = 100, 
+    deck_id: int | None = None,
+    db: Session = Depends(get_db)
+):
+    """Obtener todas las flashcards, opcionalmente filtradas por deck"""
+    query = db.query(Flashcard)
+    if deck_id:
+        query = query.filter(Flashcard.deck_id == deck_id)
+    return query.offset(skip).limit(limit).all()
+
+
+@router.get("/{flashcard_id}", response_model=FlashcardResponse)
+def get_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
+    """Obtener flashcard por ID"""
+    flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
+    if not flashcard:
+        raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    return flashcard
+
+
+@router.put("/{flashcard_id}", response_model=FlashcardResponse)
+def update_flashcard(
+    flashcard_id: int, 
+    flashcard_update: FlashcardUpdate, 
+    db: Session = Depends(get_db)
+):
+    """Actualizar flashcard"""
+    db_flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
+    if not db_flashcard:
+        raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    
+    update_data = flashcard_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_flashcard, key, value)
+    
+    db.add(db_flashcard)
+    db.commit()
+    db.refresh(db_flashcard)
+    return db_flashcard
+
+
+@router.delete("/{flashcard_id}")
+def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
+    """Eliminar flashcard"""
+    flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
+    if not flashcard:
+        raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    
+    db.delete(flashcard)
+    db.commit()
+    return {"message": "Flashcard eliminada"}
