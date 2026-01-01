@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
+
 interface Flashcard {
   id: number;
   front: string;
@@ -30,7 +32,7 @@ export default function StudyPage() {
     setLoading(true);
     setShowAnswer(false);
     try {
-      const response = await fetch("http://localhost:7999/api/study/next");
+      const response = await fetch(`${API_URL}/api/study/next`);
       const data = await response.json();
 
       if (data === null) {
@@ -53,7 +55,7 @@ export default function StudyPage() {
     setStudying(true);
 
     try {
-      const response = await fetch("http://localhost:7999/api/study/review", {
+      const response = await fetch(`${API_URL}/api/study/review`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

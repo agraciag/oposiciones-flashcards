@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
+
 interface Deck {
   id: number;
   name: string;
@@ -30,7 +32,7 @@ export default function NewCardPage() {
 
   const fetchDecks = async () => {
     try {
-      const response = await fetch("http://localhost:7999/api/decks/");
+      const response = await fetch(`${API_URL}/api/decks/`);
       const data = await response.json();
       setDecks(data);
       if (data.length > 0) {
@@ -48,7 +50,7 @@ export default function NewCardPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:7999/api/flashcards/", {
+      const response = await fetch(`${API_URL}/api/flashcards/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

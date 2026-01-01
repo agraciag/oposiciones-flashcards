@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
+
 export default function NewDeckPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -17,7 +19,7 @@ export default function NewDeckPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:7999/api/decks/", {
+      const response = await fetch(`${API_URL}/api/decks/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
