@@ -29,10 +29,12 @@ class Settings(BaseSettings):
 
     # App
     DEBUG: bool = True
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000"
-    ]
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        """Parse ALLOWED_ORIGINS string into list"""
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
 
     class Config:
         env_file = ".env"
