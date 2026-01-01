@@ -1,3 +1,7 @@
+# IMPORTANTE: Este archivo contiene credenciales de DESARROLLO LOCAL únicamente.
+# NO usar estas contraseñas en producción.
+# Para producción, usar variables de entorno o secrets management.
+
 version: '3.8'
 
 services:
@@ -7,7 +11,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: oposiciones
-      POSTGRES_PASSWORD: oposiciones2026
+      POSTGRES_PASSWORD: oposiciones2026  # SOLO DESARROLLO - Cambiar en producción
       POSTGRES_DB: oposiciones_flashcards
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_ES.UTF-8"
     ports:
