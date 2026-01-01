@@ -11,6 +11,49 @@ Sistema completo de estudio con:
 
 ---
 
+## 🎯 ¿Cómo Usar OpositApp?
+
+Tienes **3 formas** de estudiar tus flashcards:
+
+### 📱 1. Telegram Bot (Recomendado para móvil)
+```bash
+# Configurar token en telegram-bot/.env
+# Iniciar bot
+cd telegram-bot
+source venv/bin/activate
+python3 bot.py
+
+# En Telegram:
+# 1. Busca tu bot
+# 2. Envía /start
+# 3. Usa /study para estudiar
+```
+
+### 💻 2. Interfaz Web (Recomendado para PC)
+```bash
+# Frontend ya corriendo en:
+http://localhost:3000
+
+# Accede a:
+# - Dashboard: http://localhost:3000
+# - Estudiar: http://localhost:3000/study
+# - Crear tarjeta: http://localhost:3000/cards/new
+```
+
+### 🔧 3. API REST (Para desarrolladores)
+```bash
+# Ver docs interactivas:
+http://localhost:8000/docs
+
+# Endpoints:
+GET  /api/study/next        # Obtener siguiente flashcard
+POST /api/study/review      # Evaluar respuesta
+GET  /api/study/stats       # Ver estadísticas
+POST /api/flashcards/       # Crear flashcard
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Iniciar servicios (PostgreSQL + Redis)
@@ -286,18 +329,31 @@ make logs-redis        # Solo Redis
 - [x] Repositorio en GitHub: https://github.com/agraciag/oposiciones-flashcards
 - [ ] Tests unitarios (próximamente)
 
-### 🔄 FASE 2: Telegram Bot (Semana 2)
-- [ ] Setup bot
-- [ ] Comandos básicos
-- [ ] Envío preguntas
-- [ ] Respuestas y evaluación
-- [ ] Notificaciones
+### ✅ FASE 2: Frontend Web - COMPLETADA (1 enero 2026)
+- [x] Setup Next.js 16 con TypeScript y Tailwind CSS
+- [x] Dashboard con estadísticas en tiempo real
+- [x] Interfaz de estudio interactiva
+- [x] Formularios crear mazos y flashcards
+- [x] Integración completa con API backend
+- [x] Diseño responsive y moderno
+- [x] Rutas: /, /study, /decks/new, /cards/new
+- [x] Frontend corriendo en http://localhost:3000
 
-### 📋 FASE 3: Frontend (Semana 3)
-- [ ] Setup Next.js
-- [ ] Páginas básicas
-- [ ] Integración API
-- [ ] PWA offline
+### ✅ FASE 3: Telegram Bot - COMPLETADA (1 enero 2026)
+- [x] Setup bot con python-telegram-bot 20.7
+- [x] Comandos básicos: /start, /help, /study, /stats
+- [x] Sistema de preguntas interactivo con botones inline
+- [x] Evaluación SM-2 (Again, Hard, Good, Easy)
+- [x] Integración con API backend
+- [x] Sesiones de estudio por usuario
+- [x] Manejo de errores y reconexión
+- [x] README y documentación completa
+
+### ✅ FASE 4: Contenido - COMPLETADA (1 enero 2026)
+- [x] Script seed para Tema 1 Constitución
+- [x] 16 flashcards Art. 14-29 (Derechos Fundamentales)
+- [x] Metadatos completos: artículo, ley, tags
+- [x] Listas para estudiar inmediatamente
 
 ### 🤖 FASE 4: Agente (Semana 4)
 - [ ] Scraper BOE/BOA
