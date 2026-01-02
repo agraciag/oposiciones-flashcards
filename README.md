@@ -33,7 +33,10 @@ Tienes **3 formas** de estudiar tus flashcards:
 ### 📱 1. Telegram Bot (Recomendado para móvil)
 ```bash
 # Configurar token en telegram-bot/.env
-# Iniciar bot
+# Iniciar bot con PM2 (recomendado)
+pm2 start ecosystem.config.js --only oposit-telegram
+
+# O manualmente:
 cd telegram-bot
 source venv/bin/activate
 python3 bot.py
@@ -41,7 +44,9 @@ python3 bot.py
 # En Telegram:
 # 1. Busca tu bot
 # 2. Envía /start
-# 3. Usa /study para estudiar
+# 3. Autentícate: /login username password
+#    Ejemplo: /login alejandro oposit2026
+# 4. Usa /study para estudiar
 ```
 
 ### 💻 2. Interfaz Web (Recomendado para PC)

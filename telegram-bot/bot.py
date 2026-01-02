@@ -15,9 +15,6 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
-    MessageHandler,
-    filters,
-    ConversationHandler,
 )
 
 # Cargar variables de entorno
@@ -37,9 +34,6 @@ logger = logging.getLogger(__name__)
 # Almacenamiento temporal de flashcards y tokens JWT (por usuario de Telegram)
 user_sessions = {}  # flashcards en sesión
 user_tokens = {}    # tokens JWT por telegram_user_id
-
-# Estados para conversación de login
-LOGIN_USERNAME, LOGIN_PASSWORD = range(2)
 
 
 def get_auth_headers(telegram_user_id):
@@ -82,7 +76,7 @@ Usa /study para comenzar tu sesión de estudio 📚
 Sistema inteligente de flashcards con repetición espaciada para oposiciones.
 
 <b>⚠️ Primero necesitas autenticarte:</b>
-Usa /login para vincular tu cuenta de OpositApp
+<code>/login username password</code>
 
 <b>Comandos disponibles:</b>
 /login - Iniciar sesión con tu cuenta
@@ -100,7 +94,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 📖 <b>AYUDA - OpositApp Bot</b>
 
 <b>Comandos de Autenticación:</b>
-/login - Vincular tu cuenta de OpositApp
+/login username password - Vincular tu cuenta de OpositApp
 /logout - Cerrar sesión
 
 <b>Comandos de Estudio:</b>
@@ -131,45 +125,35 @@ Cada usuario tiene sus propios mazos y progreso independiente. Puedes explorar y
     await update.message.reply_text(help_text, parse_mode='HTML')
 
 
-async def login_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Comando /login - Iniciar proceso de login"""
+async def login_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comando /login username password - Autenticación"""
     telegram_id = update.effective_user.id
 
+    # Verificar si ya está autenticado
     if is_authenticated(telegram_id):
         await update.message.reply_text(
             "✅ Ya estás autenticado.\n"
             "Usa /logout si quieres cambiar de cuenta."
         )
-        return ConversationHandler.END
+        return
 
-    await update.message.reply_text(
-        "🔐 <b>Autenticación OpositApp</b>\n\n"
-        "Por favor, envía tu <b>nombre de usuario</b>:\n\n"
-        "<i>Usa /cancel para cancelar (expira en 5 min)</i>",
-        parse_mode='HTML'
-    )
-    return LOGIN_USERNAME
+    # Verificar argumentos
+    if len(context.args) != 2:
+        await update.message.reply_text(
+            "🔐 <b>Autenticación OpositApp</b>\n\n"
+            "<b>Uso:</b> /login username password\n\n"
+            "<b>Ejemplo:</b> <code>/login alejandro oposit2026</code>\n\n"
+            "<i>⚠️ Borra tu mensaje después de enviarlo por seguridad</i>\n\n"
+            "<b>¿No tienes cuenta?</b>\n"
+            "Regístrate en http://localhost:2998/register",
+            parse_mode='HTML'
+        )
+        return
 
+    username = context.args[0]
+    password = context.args[1]
 
-async def login_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Recibir nombre de usuario"""
-    context.user_data['username'] = update.message.text
-    await update.message.reply_text(
-        f"👤 Usuario: <code>{update.message.text}</code>\n\n"
-        f"Ahora envía tu <b>contraseña</b>:\n\n"
-        f"<i>⚠️ Borra tu mensaje después de enviarlo por seguridad</i>",
-        parse_mode='HTML'
-    )
-    return LOGIN_PASSWORD
-
-
-async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Recibir contraseña y autenticar"""
-    username = context.user_data.get('username')
-    password = update.message.text
-    telegram_id = update.effective_user.id
-
-    # Borrar mensaje con contraseña
+    # Borrar mensaje con credenciales
     try:
         await update.message.delete()
     except:
@@ -177,6 +161,7 @@ async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         # Autenticar con el backend
+        logger.info(f"Intentando login para usuario: {username}")
         response = requests.post(
             f"{API_URL}/auth/token",
             data={
@@ -191,6 +176,7 @@ async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Guardar token
             user_tokens[telegram_id] = token
+            logger.info(f"Login exitoso para usuario: {username} (telegram_id: {telegram_id})")
 
             # Obtener info del usuario
             user_response = requests.get(
@@ -214,11 +200,12 @@ async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     text="✅ Autenticación exitosa.\n\nUsa /study para comenzar."
                 )
         else:
+            logger.warning(f"Login fallido para usuario: {username}")
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="❌ <b>Error de autenticación</b>\n\n"
                      "Usuario o contraseña incorrectos.\n"
-                     "Intenta de nuevo con /login",
+                     "Intenta de nuevo con /login username password",
                 parse_mode='HTML'
             )
     except Exception as e:
@@ -228,26 +215,6 @@ async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text="❌ Error de conexión con el servidor.\n"
                  "Verifica que el backend esté corriendo."
         )
-
-    return ConversationHandler.END
-
-
-async def login_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Cancelar proceso de login"""
-    await update.message.reply_text(
-        "❌ Login cancelado.\n"
-        "Usa /login cuando quieras autenticarte."
-    )
-    return ConversationHandler.END
-
-
-async def login_timeout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Timeout de conversación de login"""
-    await update.message.reply_text(
-        "⏱️ El proceso de login ha expirado por inactividad.\n"
-        "Usa /login para intentarlo de nuevo."
-    )
-    return ConversationHandler.END
 
 
 async def logout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -512,23 +479,10 @@ def main():
     # Crear aplicación
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # Conversación de login
-    login_handler = ConversationHandler(
-        entry_points=[CommandHandler("login", login_start)],
-        states={
-            LOGIN_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_username)],
-            LOGIN_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_password)],
-        },
-        fallbacks=[CommandHandler("cancel", login_cancel)],
-        conversation_timeout=300,  # 5 minutos de timeout (expira automáticamente)
-        name="login_conversation",
-        persistent=False,
-    )
-
     # Registrar handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(login_handler)
+    application.add_handler(CommandHandler("login", login_command))
     application.add_handler(CommandHandler("logout", logout_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("study", study_command))
