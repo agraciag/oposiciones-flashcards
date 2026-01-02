@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
 
@@ -10,6 +11,8 @@ interface Deck {
   id: number;
   name: string;
   description: string;
+  is_public: bool;
+  user_id: number;
   created_at: string;
 }
 
@@ -24,46 +27,69 @@ interface Flashcard {
 export default function DeckDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user, fetchWithAuth, loading: authLoading } = useAuth();
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [toggling, setToggling] = useState(false);
 
   const deckId = params.id;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch deck details
-        const deckRes = await fetch(`${API_URL}/api/decks/${deckId}`);
-        if (!deckRes.ok) throw new Error("Deck not found");
-        const deckData = await deckRes.json();
-        setDeck(deckData);
-
-        // Fetch cards for this deck
-        const cardsRes = await fetch(`${API_URL}/api/flashcards/?deck_id=${deckId}`);
-        if (cardsRes.ok) {
-          const cardsData = await cardsRes.json();
-          setCards(cardsData);
-        }
-      } catch (err) {
-        setError("Error al cargar el mazo");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (deckId) {
+    if (!authLoading && !user) {
+      router.push("/login");
+      return;
+    }
+    if (user && deckId) {
       fetchData();
     }
-  }, [deckId]);
+  }, [deckId, user, authLoading]);
+
+  const fetchData = async () => {
+    try {
+      // Fetch deck details
+      const deckRes = await fetchWithAuth(`${API_URL}/api/decks/${deckId}`);
+      if (!deckRes.ok) throw new Error("Deck not found");
+      const deckData = await deckRes.json();
+      setDeck(deckData);
+
+      // Fetch cards for this deck
+      const cardsRes = await fetchWithAuth(`${API_URL}/api/flashcards/?deck_id=${deckId}`);
+      if (cardsRes.ok) {
+        const cardsData = await cardsRes.json();
+        setCards(cardsData);
+      }
+    } catch (err) {
+      setError("Error al cargar el mazo");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTogglePublic = async () => {
+    setToggling(true);
+    try {
+      const res = await fetchWithAuth(`${API_URL}/api/decks/${deckId}/toggle-public`, {
+        method: "PUT",
+      });
+      if (res.ok) {
+        const updatedDeck = await res.json();
+        setDeck(updatedDeck);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!confirm("¿Estás seguro de que quieres eliminar este mazo y todas sus tarjetas?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/decks/${deckId}`, {
+      const res = await fetchWithAuth(`${API_URL}/api/decks/${deckId}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -77,8 +103,10 @@ export default function DeckDetailPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-10">Cargando...</div>;
+  if (authLoading || loading) return <div className="text-center py-10">Cargando...</div>;
   if (error || !deck) return <div className="text-center py-10 text-red-600">{error || "Mazo no encontrado"}</div>;
+
+  const isOwner = user?.id === deck.user_id;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -93,7 +121,14 @@ export default function DeckDetailPage() {
           </Link>
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{deck.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{deck.name}</h1>
+                {deck.is_public ? (
+                  <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">PÚBLICO</span>
+                ) : (
+                   <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">PRIVADO</span>
+                )}
+              </div>
               <p className="text-gray-600">{deck.description}</p>
             </div>
             <div className="flex gap-2">
@@ -103,12 +138,24 @@ export default function DeckDetailPage() {
               >
                 ▶ Estudiar
               </Link>
-              <button
-                onClick={handleDelete}
-                className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-semibold transition-colors"
-              >
-                Eliminar
-              </button>
+              
+              {isOwner && (
+                <>
+                  <button
+                    onClick={handleTogglePublic}
+                    disabled={toggling}
+                    className="bg-white border border-purple-200 text-purple-700 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition-colors disabled:opacity-50"
+                  >
+                    {deck.is_public ? "Hacer Privado" : "Hacer Público"}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-red-100 transition-colors"
+                  >
+                    Eliminar
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

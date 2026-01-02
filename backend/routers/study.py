@@ -10,8 +10,9 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from database import get_db
-from models import Flashcard, StudySession, StudyLog
+from models import Flashcard, StudySession, StudyLog, User, Deck
 from sm2 import calculate_sm2
+from auth_utils import get_current_user
 
 router = APIRouter()
 
@@ -63,9 +64,16 @@ class FlashcardStudy(BaseModel):
 
 
 @router.get("/next", response_model=FlashcardStudy | None)
-def get_next_flashcard(deck_id: int | None = None, db: Session = Depends(get_db)):
-    """Obtener siguiente flashcard para estudiar"""
-    query = db.query(Flashcard).filter(Flashcard.next_review <= utc_now())
+def get_next_flashcard(
+    deck_id: int | None = None, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener siguiente flashcard para estudiar (solo de mis mazos)"""
+    query = db.query(Flashcard).join(Deck).filter(
+        Deck.user_id == current_user.id,
+        Flashcard.next_review <= utc_now()
+    )
 
     if deck_id:
         query = query.filter(Flashcard.deck_id == deck_id)
@@ -80,12 +88,23 @@ def get_next_flashcard(deck_id: int | None = None, db: Session = Depends(get_db)
 
 
 @router.post("/review", response_model=StudyResponse)
-def review_flashcard(review: StudyRequest, session_id: int | None = None, db: Session = Depends(get_db)):
+def review_flashcard(
+    review: StudyRequest, 
+    session_id: int | None = None, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Revisar flashcard con algoritmo SM-2"""
-    flashcard = db.query(Flashcard).filter(Flashcard.id == review.flashcard_id).first()
+    # Verificar que la flashcard pertenece al usuario (vía deck)
+    flashcard_data = db.query(Flashcard, Deck).join(Deck).filter(
+        Flashcard.id == review.flashcard_id,
+        Deck.user_id == current_user.id
+    ).first()
 
-    if not flashcard:
-        raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    if not flashcard_data:
+        raise HTTPException(status_code=404, detail="Flashcard no encontrada o no tienes permiso")
+
+    flashcard, deck = flashcard_data
 
     # Guardar valores antes del review
     rep_before = flashcard.repetitions
@@ -117,16 +136,24 @@ def review_flashcard(review: StudyRequest, session_id: int | None = None, db: Se
 
     # Crear o obtener sesión de estudio
     if not session_id:
-        # Crear sesión temporal para testing
-        study_session = StudySession(
-            user_id=1,  # Usuario de prueba
-            started_at=utc_now()
-        )
-        db.add(study_session)
-        db.flush()  # Para obtener el ID sin hacer commit
+        # Buscar sesión activa hoy para este usuario o crear una
+        today = utc_now().date()
+        study_session = db.query(StudySession).filter(
+            StudySession.user_id == current_user.id,
+            func.date(StudySession.started_at) == today
+        ).first()
+
+        if not study_session:
+            study_session = StudySession(
+                user_id=current_user.id,
+                started_at=utc_now()
+            )
+            db.add(study_session)
+            db.flush()
+        
         session_id = study_session.id
 
-    # Crear log de estudio con valores antes/después
+    # Crear log de estudio
     study_log = StudyLog(
         session_id=session_id,
         flashcard_id=flashcard.id,
@@ -156,9 +183,13 @@ def review_flashcard(review: StudyRequest, session_id: int | None = None, db: Se
 
 
 @router.get("/stats")
-def get_study_stats(deck_id: int | None = None, db: Session = Depends(get_db)):
-    """Obtener estadísticas de estudio"""
-    query = db.query(Flashcard)
+def get_study_stats(
+    deck_id: int | None = None, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener estadísticas de estudio del usuario actual"""
+    query = db.query(Flashcard).join(Deck).filter(Deck.user_id == current_user.id)
 
     if deck_id:
         query = query.filter(Flashcard.deck_id == deck_id)

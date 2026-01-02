@@ -45,6 +45,10 @@ class Deck(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    
+    # Sharing features
+    is_public = Column(Boolean, default=False, index=True)
+    original_deck_id = Column(Integer, ForeignKey("decks.id"), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -52,6 +56,10 @@ class Deck(Base):
     # Relaciones
     user = relationship("User", back_populates="decks")
     flashcards = relationship("Flashcard", back_populates="deck", cascade="all, delete-orphan")
+    
+    # Self-referential relationship for clones (optional but good for tracking)
+    clones = relationship("Deck", back_populates="original_deck", remote_side=[id])
+    original_deck = relationship("Deck", back_populates="clones", remote_side=[original_deck_id])
 
 
 class Flashcard(Base):

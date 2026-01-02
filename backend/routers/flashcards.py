@@ -2,14 +2,15 @@
 Router para gestión de flashcards
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
 from datetime import datetime
 
 from database import get_db
-from models import Flashcard, Deck
+from models import Flashcard, Deck, User
+from auth_utils import get_current_user
 
 router = APIRouter()
 
@@ -52,12 +53,20 @@ class FlashcardUpdate(BaseModel):
 
 
 @router.post("/", response_model=FlashcardResponse)
-def create_flashcard(flashcard: FlashcardCreate, db: Session = Depends(get_db)):
+def create_flashcard(
+    flashcard: FlashcardCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Crear nueva flashcard"""
-    # Verificar que el deck existe
+    # Verificar que el deck existe y pertenece al usuario
     deck = db.query(Deck).filter(Deck.id == flashcard.deck_id).first()
     if not deck:
         raise HTTPException(status_code=404, detail="Deck no encontrado")
+    
+    if deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No puedes añadir tarjetas a un mazo que no es tuyo")
+
     # Crear flashcard
     db_flashcard = Flashcard(**flashcard.model_dump())
     db.add(db_flashcard)
@@ -71,21 +80,43 @@ def get_flashcards(
     skip: int = 0, 
     limit: int = 100, 
     deck_id: int | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    """Obtener todas las flashcards, opcionalmente filtradas por deck"""
-    query = db.query(Flashcard)
+    """Obtener flashcards. Si deck_id, comprueba acceso al deck. Si no, devuelve las del usuario."""
     if deck_id:
-        query = query.filter(Flashcard.deck_id == deck_id)
-    return query.offset(skip).limit(limit).all()
+        # Check deck access
+        deck = db.query(Deck).filter(Deck.id == deck_id).first()
+        if not deck:
+             return [] # Or 404
+        
+        # Access control: Owner OR Public
+        if deck.user_id != current_user.id and not deck.is_public:
+             raise HTTPException(status_code=403, detail="No tienes acceso a este mazo")
+        
+        return db.query(Flashcard).filter(Flashcard.deck_id == deck_id).offset(skip).limit(limit).all()
+    else:
+        # Return all cards owned by user (via decks)
+        return db.query(Flashcard).join(Deck).filter(Deck.user_id == current_user.id).offset(skip).limit(limit).all()
 
 
 @router.get("/{flashcard_id}", response_model=FlashcardResponse)
-def get_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
+def get_flashcard(
+    flashcard_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Obtener flashcard por ID"""
     flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
     if not flashcard:
         raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    
+    # Check access (Owner OR Public Deck)
+    # Lazy loading deck might trigger query, safer to join or get
+    deck = db.query(Deck).filter(Deck.id == flashcard.deck_id).first()
+    if deck.user_id != current_user.id and not deck.is_public:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta tarjeta")
+
     return flashcard
 
 
@@ -93,12 +124,20 @@ def get_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
 def update_flashcard(
     flashcard_id: int, 
     flashcard_update: FlashcardUpdate, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Actualizar flashcard"""
-    db_flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
-    if not db_flashcard:
+    # Join with Deck to check ownership in one query
+    result = db.query(Flashcard, Deck).join(Deck).filter(Flashcard.id == flashcard_id).first()
+    
+    if not result:
         raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    
+    db_flashcard, deck = result
+
+    if deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No puedes editar esta tarjeta")
     
     update_data = flashcard_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -111,11 +150,21 @@ def update_flashcard(
 
 
 @router.delete("/{flashcard_id}")
-def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
+def delete_flashcard(
+    flashcard_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Eliminar flashcard"""
-    flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id).first()
-    if not flashcard:
+    result = db.query(Flashcard, Deck).join(Deck).filter(Flashcard.id == flashcard_id).first()
+    
+    if not result:
         raise HTTPException(status_code=404, detail="Flashcard no encontrada")
+    
+    flashcard, deck = result
+
+    if deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No puedes eliminar esta tarjeta")
     
     db.delete(flashcard)
     db.commit()

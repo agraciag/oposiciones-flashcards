@@ -1,39 +1,35 @@
-# Aportación de Gemini - Resolución de Rutas y 404
+# Aportación de Gemini - Resolución de Rutas, Sistema Multialumno y Repositorio Público
 
-Este documento resume la intervención realizada para corregir los errores 404 detectados en la plataforma y las mejoras implementadas tanto en el frontend como en el backend.
+Este documento detalla la evolución del proyecto bajo la intervención de Gemini, cubriendo desde la corrección de errores iniciales hasta la implementación de arquitecturas complejas de compartición de datos.
 
-## 1. Diagnóstico Inicial
-Al analizar la estructura del proyecto tras los reportes de errores 404 en URLs como `/decks/1` o `/cards/1`, se identificaron las siguientes carencias:
+## 1. Correcciones Iniciales (Fase 1)
+Se resolvieron los errores 404 mediante la creación de rutas dinámicas en el frontend y la expansión del CRUD en el backend para flashcards.
 
-*   **Frontend (Next.js):** Existían carpetas para la creación de contenido (`/decks/new`, `/cards/new`), pero no existían las **rutas dinámicas** para visualizar o editar elementos existentes. Next.js arrojaba 404 porque no había archivos `page.tsx` que manejaran los IDs.
-*   **Backend (FastAPI):** El router de flashcards solo permitía la creación (`POST`), careciendo de endpoints para listar, obtener detalles, actualizar o eliminar tarjetas individuales.
+## 2. Sistema Multialumno (Multi-tenancy) y Seguridad
+Se ha transformado la aplicación de un sistema monousuario a una plataforma robusta para múltiples estudiantes:
 
-## 2. Cambios Realizados
+### Backend (Seguridad JWT)
+*   **Autenticación:** Implementación de seguridad basada en **OAuth2 con tokens JWT**.
+*   **Hashing:** Uso de `passlib` con `bcrypt` para el almacenamiento seguro de contraseñas.
+*   **Aislamiento de Datos:** Se han modificado todos los routers (`decks`, `flashcards`, `study`) para que utilicen la dependencia `get_current_user`. Ahora, cada alumno solo puede ver, editar o estudiar **sus propios mazos**.
+*   **Persistencia:** La base de datos ahora gestiona correctamente la relación entre `User` y sus recursos.
 
-### Backend (API)
-Se actualizó `backend/routers/flashcards.py` para completar el ciclo CRUD de las tarjetas:
-*   **Listado:** `GET /api/flashcards/` (con soporte para filtrado por `deck_id`).
-*   **Detalle:** `GET /api/flashcards/{id}`.
-*   **Actualización:** `PUT /api/flashcards/{id}` (utilizando un nuevo esquema `FlashcardUpdate`).
-*   **Eliminación:** `DELETE /api/flashcards/{id}`.
+### Frontend (Gestión de Sesión)
+*   **AuthContext:** Implementación de un contexto global en React que gestiona el login, registro y la persistencia del token en `localStorage`.
+*   **Protección de Rutas:** Redirección automática al `/login` si no hay sesión activa.
+*   **fetchWithAuth:** Helper para realizar peticiones autenticadas incluyendo automáticamente el header `Authorization: Bearer <token>`.
 
-### Frontend (Interfaz de Usuario)
-Se crearon las páginas necesarias para eliminar los 404 y permitir la gestión del contenido:
+## 3. Repositorio de Mazos Públicos (Social Learning)
+Se ha implementado una capa social que permite a los alumnos colaborar sin comprometer su progreso individual:
 
-1.  **Vista de Detalle de Mazo:**
-    *   Archivo: `frontend/src/app/decks/[id]/page.tsx`
-    *   Funcionalidad: Muestra el nombre, descripción y todas las tarjetas asociadas al mazo. Incluye accesos directos para estudiar, añadir tarjetas o borrar el mazo.
-2.  **Edición de Tarjetas:**
-    *   Archivo: `frontend/src/app/cards/[id]/page.tsx`
-    *   Funcionalidad: Formulario para modificar el anverso, reverso y metadatos (ley, artículo, etiquetas) de una tarjeta existente.
-3.  **Listado Global de Mazos:**
-    *   Archivo: `frontend/src/app/decks/page.tsx`
-    *   Funcionalidad: Una vista centralizada para ver todos los mazos disponibles (antes la URL `/decks` fallaba).
+*   **Modelo de Clonado:** En lugar de compartir una única instancia de tarjeta (que rompería el algoritmo SM-2 personalizado), se utiliza un sistema de **copia profunda**.
+*   **Publicación:** Los usuarios pueden marcar sus mazos como `is_public` para que aparezcan en la comunidad.
+*   **Exploración (`/decks/explore`):** Una nueva sección donde los alumnos pueden descubrir mazos de otros usuarios.
+*   **Importación Inteligente:** Al clonar un mazo público, el sistema copia todas las tarjetas pero **resetea el progreso de estudio** (intervalos, repeticiones) para que el nuevo dueño empiece su aprendizaje desde cero.
 
-## 3. Resultados
-*   ✅ **URLs Funcionales:** `/decks`, `/decks/[id]` y `/cards/[id]` ya no devuelven 404.
-*   ✅ **Navegación Fluida:** El Dashboard ahora permite entrar en cada mazo y gestionar sus tarjetas de forma intuitiva.
-*   ✅ **API Robusta:** El backend ahora soporta todas las operaciones necesarias para que el frontend interactúe con las flashcards.
+## 4. Mejoras de Estabilidad (Defensive Coding)
+*   Se han añadido validaciones en el frontend para manejar respuestas inesperadas de la API (evitando errores de tipo como `decks.map is not a function`).
+*   Se ha actualizado el esquema de la base de datos para soportar el rastreo de mazos originales (`original_deck_id`).
 
 ---
-*Intervención realizada el 1 de enero de 2026.*
+*Intervención completada el 1 de enero de 2026.*
