@@ -145,7 +145,7 @@ async def login_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🔐 <b>Autenticación OpositApp</b>\n\n"
         "Por favor, envía tu <b>nombre de usuario</b>:\n\n"
-        "<i>Usa /cancel para cancelar</i>",
+        "<i>Usa /cancel para cancelar (expira en 5 min)</i>",
         parse_mode='HTML'
     )
     return LOGIN_USERNAME
@@ -237,6 +237,15 @@ async def login_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "❌ Login cancelado.\n"
         "Usa /login cuando quieras autenticarte."
+    )
+    return ConversationHandler.END
+
+
+async def login_timeout(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Timeout de conversación de login"""
+    await update.message.reply_text(
+        "⏱️ El proceso de login ha expirado por inactividad.\n"
+        "Usa /login para intentarlo de nuevo."
     )
     return ConversationHandler.END
 
@@ -511,6 +520,9 @@ def main():
             LOGIN_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_password)],
         },
         fallbacks=[CommandHandler("cancel", login_cancel)],
+        conversation_timeout=300,  # 5 minutos de timeout (expira automáticamente)
+        name="login_conversation",
+        persistent=False,
     )
 
     # Registrar handlers
