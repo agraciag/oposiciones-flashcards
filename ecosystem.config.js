@@ -13,7 +13,7 @@ module.exports = {
     {
       name: 'oposit-backend',
       cwd: './backend',
-      script: 'python3',
+      script: './venv/bin/python3',
       args: 'main.py',
       interpreter: 'none',
       instances: 1,
@@ -52,7 +52,7 @@ module.exports = {
     {
       name: 'oposit-telegram',
       cwd: './telegram-bot',
-      script: 'python3',
+      script: './venv/bin/python3',
       args: 'bot.py',
       interpreter: 'none',
       instances: 1,
