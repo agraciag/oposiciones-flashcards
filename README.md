@@ -4,10 +4,25 @@
 
 Sistema completo de estudio con:
 - ✅ Repetición espaciada (algoritmo SM-2)
+- ✅ Autenticación JWT multi-usuario
+- ✅ Mazos públicos compartibles y clonables
 - ✅ Bot Telegram integrado
-- ✅ Verificación automática legislación BOE/BOA
+- ✅ Verificación automática legislación BOE/BOA (próximamente)
 - ✅ PWA offline-first
 - ✅ Sincronización multi-dispositivo
+
+---
+
+## 🔐 Autenticación
+
+OpositApp ahora es **multi-usuario**. Cada opositor tiene su propia cuenta y puede:
+- 📚 Crear y gestionar sus propios mazos
+- 🌍 Explorar mazos públicos de otros usuarios
+- 📥 Clonar mazos de la comunidad para su estudio personal
+- 📊 Mantener su progreso de estudio independiente
+
+**Primera vez:** Regístrate en http://localhost:2998/register
+**Ya tienes cuenta:** Login en http://localhost:2998/login
 
 ---
 
@@ -55,6 +70,30 @@ POST /api/flashcards/       # Crear flashcard
 ---
 
 ## 🚀 Quick Start
+
+### Opción A: Usar PM2 (Recomendado - Un solo comando)
+
+```bash
+# Iniciar todo (Docker + Backend + Frontend + Telegram)
+./start-all.sh   # Linux/WSL
+# o
+.\start-all.ps1  # Windows PowerShell
+
+# Ver estado
+pm2 status
+
+# Ver logs
+pm2 logs
+
+# Detener todo
+./stop-all.sh    # Linux/WSL
+# o
+.\stop-all.ps1   # Windows PowerShell
+```
+
+Ver [PM2-SETUP.md](./PM2-SETUP.md) para configuración de inicio automático con Windows.
+
+### Opción B: Inicio Manual
 
 ### 1. Iniciar servicios (PostgreSQL + Redis)
 
@@ -178,17 +217,38 @@ Password: admin2026
 
 ```
 oposiciones-flashcards/
-├── backend/              # FastAPI + Python
-│   ├── main.py          # Aplicación principal
-│   ├── models.py        # Modelos SQLAlchemy
-│   ├── database.py      # Configuración BD
-│   ├── sm2.py           # Algoritmo repetición espaciada
-│   └── routers/         # Endpoints API
-├── frontend/            # Next.js + React (TODO)
-├── telegram-bot/        # Bot Telegram (TODO)
-├── docker-compose.yml   # Servicios Docker
-├── Makefile            # Comandos útiles
-└── README.md           # Este archivo
+├── backend/                  # FastAPI + Python
+│   ├── main.py              # Aplicación principal
+│   ├── models.py            # Modelos SQLAlchemy
+│   ├── database.py          # Configuración BD
+│   ├── config.py            # Settings y variables de entorno
+│   ├── sm2.py               # Algoritmo repetición espaciada
+│   ├── auth_utils.py        # Utilidades JWT y bcrypt
+│   ├── update_schema.py     # Script migración BD
+│   └── routers/             # Endpoints API
+│       ├── auth.py          # Autenticación (register, login, me)
+│       ├── decks.py         # Gestión mazos (CRUD, public, clone)
+│       ├── flashcards.py    # Gestión tarjetas
+│       ├── study.py         # Sistema de estudio SM-2
+│       └── legislation.py   # Actualización legislativa
+├── frontend/                # Next.js 16 + React 18
+│   ├── src/app/
+│   │   ├── page.tsx         # Dashboard principal
+│   │   ├── login/           # Página login
+│   │   ├── register/        # Página registro
+│   │   ├── study/           # Interfaz estudio
+│   │   └── decks/
+│   │       ├── [id]/        # Detalle mazo
+│   │       └── explore/     # Explorar mazos públicos
+│   └── src/context/
+│       └── AuthContext.tsx  # Context autenticación global
+├── telegram-bot/            # Bot Telegram
+│   └── bot.py              # Comandos /start, /study, /stats
+├── docker-compose.yml       # PostgreSQL + Redis
+├── ecosystem.config.js      # PM2 configuration
+├── start-all.sh/.ps1       # Scripts inicio automático
+├── Makefile                # Comandos útiles
+└── README.md               # Este archivo
 ```
 
 ---
@@ -224,15 +284,30 @@ oposiciones-flashcards/
 
 ```bash
 # Health check
-curl http://localhost:8000/
+curl http://localhost:7999/
 
-# Crear deck
-curl -X POST http://localhost:8000/api/decks/ \
+# 1️⃣ Registrar usuario
+curl -X POST http://localhost:7999/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name": "Tema 1 - Constitución", "description": "Materias comunes"}'
+  -d '{"username":"opositor1","email":"test@example.com","password":"password123"}'
 
-# Crear flashcard
-curl -X POST http://localhost:8000/api/flashcards/ \
+# 2️⃣ Login (obtener token JWT)
+TOKEN=$(curl -X POST http://localhost:7999/api/auth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=opositor1&password=password123" | jq -r .access_token)
+
+# 3️⃣ Ver perfil
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7999/api/auth/me
+
+# 4️⃣ Crear deck (con autenticación)
+curl -X POST http://localhost:7999/api/decks/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Tema 1 - Constitución", "description": "Materias comunes", "is_public": false}'
+
+# 5️⃣ Crear flashcard
+curl -X POST http://localhost:7999/api/flashcards/ \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "deck_id": 1,
@@ -242,22 +317,30 @@ curl -X POST http://localhost:8000/api/flashcards/ \
     "law_name": "Constitución Española"
   }'
 
-# Obtener siguiente tarjeta para estudiar
-curl http://localhost:8000/api/study/next
+# 6️⃣ Obtener siguiente tarjeta para estudiar
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7999/api/study/next
 
-# Estudiar tarjeta (marcar como "good")
-curl -X POST http://localhost:8000/api/study/review \
+# 7️⃣ Estudiar tarjeta (marcar como "good")
+curl -X POST http://localhost:7999/api/study/review \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "flashcard_id": 1,
     "quality": "good",
     "time_spent_seconds": 15
   }'
+
+# 8️⃣ Explorar mazos públicos
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7999/api/decks/public
+
+# 9️⃣ Clonar un mazo público
+curl -X POST "http://localhost:7999/api/decks/7/clone" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Con Swagger UI
 
-Abre http://localhost:8000/docs y prueba los endpoints interactivamente.
+Abre http://localhost:7999/docs y prueba los endpoints interactivamente. Usa el botón "Authorize" para añadir tu token JWT.
 
 ---
 
@@ -417,15 +500,27 @@ make logs-redis        # Solo Redis
 
 ### ✅ FASE 4: Contenido - COMPLETADA (1 enero 2026)
 - [x] Script seed para Tema 1 Constitución
-- [x] 16 flashcards Art. 14-29 (Derechos Fundamentales)
+- [x] 93 flashcards en 5 mazos (Temas 1-5)
 - [x] Metadatos completos: artículo, ley, tags
 - [x] Listas para estudiar inmediatamente
 
-### 🤖 FASE 4: Agente (Semana 4)
+### ✅ FASE 5: Sistema Multi-usuario - COMPLETADA (2 enero 2026)
+- [x] Autenticación JWT con bcrypt
+- [x] Sistema de registro y login
+- [x] Context global de autenticación en frontend
+- [x] Protección de rutas y endpoints
+- [x] Aislamiento de datos por usuario
+- [x] Sistema de mazos públicos compartibles
+- [x] Explorador de mazos de la comunidad
+- [x] Clonado de mazos con copia profunda
+- [x] Rastreo de mazos originales y clones
+- [x] PM2 para gestión de procesos
+
+### 🤖 FASE 6: Agente BOE/BOA (Próximamente)
 - [ ] Scraper BOE/BOA
-- [ ] Detector cambios
+- [ ] Detector cambios legislativos
 - [ ] Claude API análisis
-- [ ] Notificaciones
+- [ ] Sistema de notificaciones
 
 ---
 
