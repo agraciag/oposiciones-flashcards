@@ -12,8 +12,14 @@ Guía completa para gestionar todos los servicios de OpositApp con PM2 y configu
 
 ### 1. Instalar PM2 globalmente
 
+**En WSL (Linux):**
 ```bash
 npm install -g pm2
+```
+
+**En Windows PowerShell (nativo):**
+```powershell
+npm install -g pm2 pm2-windows-startup
 ```
 
 Verifica la instalación:
@@ -21,11 +27,29 @@ Verifica la instalación:
 pm2 --version
 ```
 
-### 2. Instalar pm2-windows-startup (solo Windows)
+### 2. Configurar inicio automático
+
+#### Opción A: WSL con inicio automático vía Windows
+
+1. Instala PM2 en WSL:
+   ```bash
+   npm install -g pm2
+   ```
+
+2. Copia `start-wsl.bat` a la carpeta de inicio de Windows:
+   ```powershell
+   # Desde PowerShell de Windows
+   copy D:\dev_projects\oposiciones-flashcards\start-wsl.bat "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\"
+   ```
+
+3. Reinicia Windows para probar.
+
+#### Opción B: Windows PowerShell nativo
 
 Para que PM2 inicie automáticamente con Windows:
 
 ```powershell
+# Solo funciona en PowerShell de Windows, NO en WSL
 npm install -g pm2-windows-startup
 pm2-startup install
 ```
