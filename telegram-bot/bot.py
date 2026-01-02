@@ -1,6 +1,7 @@
 """
 OpositApp Telegram Bot
 Bot para estudiar flashcards con repetición espaciada vía Telegram
+Con soporte de autenticación JWT multi-usuario
 """
 
 import os
@@ -14,6 +15,9 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
+    MessageHandler,
+    filters,
+    ConversationHandler,
 )
 
 # Cargar variables de entorno
@@ -21,7 +25,7 @@ load_dotenv()
 
 # Configuración
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-API_URL = os.getenv("API_URL", "http://localhost:8000/api")
+API_URL = os.getenv("API_URL", "http://localhost:7999/api")
 
 # Logging
 logging.basicConfig(
@@ -30,25 +34,62 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Almacenamiento temporal de flashcards en sesión (por usuario)
-user_sessions = {}
+# Almacenamiento temporal de flashcards y tokens JWT (por usuario de Telegram)
+user_sessions = {}  # flashcards en sesión
+user_tokens = {}    # tokens JWT por telegram_user_id
+
+# Estados para conversación de login
+LOGIN_USERNAME, LOGIN_PASSWORD = range(2)
+
+
+def get_auth_headers(telegram_user_id):
+    """Obtener headers de autenticación para un usuario"""
+    token = user_tokens.get(telegram_user_id)
+    if not token:
+        return None
+    return {"Authorization": f"Bearer {token}"}
+
+
+def is_authenticated(telegram_user_id):
+    """Verificar si el usuario está autenticado"""
+    return telegram_user_id in user_tokens
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Comando /start - Mensaje de bienvenida"""
     user = update.effective_user
-    welcome_message = f"""
-🧠 <b>¡Bienvenido a OpositApp, {user.first_name}!</b>
+    telegram_id = user.id
 
-Sistema inteligente de flashcards con repetición espaciada para oposiciones.
+    if is_authenticated(telegram_id):
+        welcome_message = f"""
+🧠 <b>¡Bienvenido de nuevo, {user.first_name}!</b>
+
+Ya estás autenticado y listo para estudiar.
 
 <b>Comandos disponibles:</b>
 /study - Estudiar flashcards
 /stats - Ver estadísticas de estudio
+/logout - Cerrar sesión
 /help - Ver ayuda completa
 
-<b>¿Listo para empezar?</b>
+<b>¿Listo para continuar?</b>
 Usa /study para comenzar tu sesión de estudio 📚
+"""
+    else:
+        welcome_message = f"""
+🧠 <b>¡Bienvenido a OpositApp, {user.first_name}!</b>
+
+Sistema inteligente de flashcards con repetición espaciada para oposiciones.
+
+<b>⚠️ Primero necesitas autenticarte:</b>
+Usa /login para vincular tu cuenta de OpositApp
+
+<b>Comandos disponibles:</b>
+/login - Iniciar sesión con tu cuenta
+/help - Ver ayuda completa
+
+<b>¿No tienes cuenta?</b>
+Regístrate en http://localhost:2998/register
 """
     await update.message.reply_text(welcome_message, parse_mode='HTML')
 
@@ -58,8 +99,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_text = """
 📖 <b>AYUDA - OpositApp Bot</b>
 
-<b>Comandos Principales:</b>
-/start - Iniciar bot
+<b>Comandos de Autenticación:</b>
+/login - Vincular tu cuenta de OpositApp
+/logout - Cerrar sesión
+
+<b>Comandos de Estudio:</b>
 /study - Comenzar sesión de estudio
 /stats - Ver tus estadísticas
 /help - Mostrar esta ayuda
@@ -78,16 +122,156 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 <b>Sistema SM-2:</b>
 El algoritmo ajusta automáticamente cuándo volver a mostrarte cada tarjeta según qué tan bien la recuerdes.
 
+<b>Multi-usuario:</b>
+Cada usuario tiene sus propios mazos y progreso independiente. Puedes explorar y clonar mazos públicos de otros usuarios.
+
 <b>Soporte:</b>
 ¿Problemas? Contacta al administrador.
 """
     await update.message.reply_text(help_text, parse_mode='HTML')
 
 
+async def login_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comando /login - Iniciar proceso de login"""
+    telegram_id = update.effective_user.id
+
+    if is_authenticated(telegram_id):
+        await update.message.reply_text(
+            "✅ Ya estás autenticado.\n"
+            "Usa /logout si quieres cambiar de cuenta."
+        )
+        return ConversationHandler.END
+
+    await update.message.reply_text(
+        "🔐 <b>Autenticación OpositApp</b>\n\n"
+        "Por favor, envía tu <b>nombre de usuario</b>:\n\n"
+        "<i>Usa /cancel para cancelar</i>",
+        parse_mode='HTML'
+    )
+    return LOGIN_USERNAME
+
+
+async def login_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Recibir nombre de usuario"""
+    context.user_data['username'] = update.message.text
+    await update.message.reply_text(
+        f"👤 Usuario: <code>{update.message.text}</code>\n\n"
+        f"Ahora envía tu <b>contraseña</b>:\n\n"
+        f"<i>⚠️ Borra tu mensaje después de enviarlo por seguridad</i>",
+        parse_mode='HTML'
+    )
+    return LOGIN_PASSWORD
+
+
+async def login_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Recibir contraseña y autenticar"""
+    username = context.user_data.get('username')
+    password = update.message.text
+    telegram_id = update.effective_user.id
+
+    # Borrar mensaje con contraseña
+    try:
+        await update.message.delete()
+    except:
+        pass
+
+    try:
+        # Autenticar con el backend
+        response = requests.post(
+            f"{API_URL}/auth/token",
+            data={
+                "username": username,
+                "password": password
+            }
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            token = data.get('access_token')
+
+            # Guardar token
+            user_tokens[telegram_id] = token
+
+            # Obtener info del usuario
+            user_response = requests.get(
+                f"{API_URL}/auth/me",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+
+            if user_response.status_code == 200:
+                user_info = user_response.json()
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=f"✅ <b>Autenticación exitosa</b>\n\n"
+                         f"👤 Usuario: {user_info['username']}\n"
+                         f"📧 Email: {user_info['email']}\n\n"
+                         f"Ya puedes usar /study para comenzar a estudiar.",
+                    parse_mode='HTML'
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text="✅ Autenticación exitosa.\n\nUsa /study para comenzar."
+                )
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="❌ <b>Error de autenticación</b>\n\n"
+                     "Usuario o contraseña incorrectos.\n"
+                     "Intenta de nuevo con /login",
+                parse_mode='HTML'
+            )
+    except Exception as e:
+        logger.error(f"Error en login: {e}")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="❌ Error de conexión con el servidor.\n"
+                 "Verifica que el backend esté corriendo."
+        )
+
+    return ConversationHandler.END
+
+
+async def login_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Cancelar proceso de login"""
+    await update.message.reply_text(
+        "❌ Login cancelado.\n"
+        "Usa /login cuando quieras autenticarte."
+    )
+    return ConversationHandler.END
+
+
+async def logout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comando /logout - Cerrar sesión"""
+    telegram_id = update.effective_user.id
+
+    if telegram_id in user_tokens:
+        del user_tokens[telegram_id]
+        await update.message.reply_text(
+            "👋 Sesión cerrada correctamente.\n"
+            "Usa /login para autenticarte de nuevo."
+        )
+    else:
+        await update.message.reply_text(
+            "⚠️ No hay ninguna sesión activa."
+        )
+
+
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Comando /stats - Mostrar estadísticas"""
+    telegram_id = update.effective_user.id
+
+    if not is_authenticated(telegram_id):
+        await update.message.reply_text(
+            "🔐 Necesitas autenticarte primero.\n"
+            "Usa /login para vincular tu cuenta."
+        )
+        return
+
     try:
-        response = requests.get(f"{API_URL}/study/stats")
+        headers = get_auth_headers(telegram_id)
+        response = requests.get(f"{API_URL}/study/stats", headers=headers)
+
         if response.status_code == 200:
             stats = response.json()
 
@@ -102,24 +286,37 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 <i>Última actualización: {datetime.now().strftime('%d/%m/%Y %H:%M')}</i>
 """
             await update.message.reply_text(stats_message, parse_mode='HTML')
+        elif response.status_code == 401:
+            del user_tokens[telegram_id]
+            await update.message.reply_text(
+                "🔐 Tu sesión ha expirado.\n"
+                "Usa /login para autenticarte de nuevo."
+            )
         else:
             await update.message.reply_text(
-                "❌ Error al obtener estadísticas. Verifica que el backend esté funcionando."
+                "❌ Error al obtener estadísticas."
             )
     except Exception as e:
         logger.error(f"Error en stats: {e}")
         await update.message.reply_text(
-            "❌ No se pudo conectar con el servidor. ¿Está el backend corriendo?"
+            "❌ No se pudo conectar con el servidor."
         )
 
 
 async def study_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Comando /study - Obtener siguiente flashcard"""
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+
+    if not is_authenticated(telegram_id):
+        await update.message.reply_text(
+            "🔐 Necesitas autenticarte primero.\n"
+            "Usa /login para vincular tu cuenta."
+        )
+        return
 
     try:
-        # Obtener siguiente flashcard del backend
-        response = requests.get(f"{API_URL}/study/next")
+        headers = get_auth_headers(telegram_id)
+        response = requests.get(f"{API_URL}/study/next", headers=headers)
 
         if response.status_code == 200:
             flashcard = response.json()
@@ -134,7 +331,7 @@ async def study_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             # Guardar flashcard en sesión del usuario
-            user_sessions[user_id] = {
+            user_sessions[telegram_id] = {
                 'flashcard': flashcard,
                 'show_answer': False,
                 'start_time': datetime.now()
@@ -157,15 +354,21 @@ async def study_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode='HTML',
                 reply_markup=reply_markup
             )
+        elif response.status_code == 401:
+            del user_tokens[telegram_id]
+            await update.message.reply_text(
+                "🔐 Tu sesión ha expirado.\n"
+                "Usa /login para autenticarte de nuevo."
+            )
         else:
             await update.message.reply_text(
-                "❌ Error al obtener flashcard. Verifica que el backend esté funcionando."
+                "❌ Error al obtener flashcard."
             )
     except Exception as e:
         logger.error(f"Error en study: {e}")
         await update.message.reply_text(
             "❌ No se pudo conectar con el servidor.\n"
-            "Asegúrate de que el backend esté corriendo en http://localhost:8000"
+            f"Asegúrate de que el backend esté corriendo en {API_URL}"
         )
 
 
@@ -174,15 +377,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
     action = query.data
 
+    # Verificar autenticación
+    if not is_authenticated(telegram_id):
+        await query.edit_message_text(
+            "🔐 Tu sesión ha expirado.\n"
+            "Usa /login para autenticarte de nuevo."
+        )
+        return
+
     # Verificar si el usuario tiene una sesión activa
-    if user_id not in user_sessions:
+    if telegram_id not in user_sessions:
         await query.edit_message_text("⚠️ Sesión expirada. Usa /study para obtener una nueva tarjeta.")
         return
 
-    session = user_sessions[user_id]
+    session = user_sessions[telegram_id]
     flashcard = session['flashcard']
 
     if action == "show_answer":
@@ -229,7 +440,12 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
 
         try:
-            response = requests.post(f"{API_URL}/study/review", json=review_data)
+            headers = get_auth_headers(telegram_id)
+            response = requests.post(
+                f"{API_URL}/study/review",
+                json=review_data,
+                headers=headers
+            )
 
             if response.status_code == 200:
                 result = response.json()
@@ -258,7 +474,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text(success_message, parse_mode='HTML')
 
                 # Limpiar sesión
-                del user_sessions[user_id]
+                del user_sessions[telegram_id]
+            elif response.status_code == 401:
+                del user_tokens[telegram_id]
+                await query.edit_message_text(
+                    "🔐 Tu sesión ha expirado.\n"
+                    "Usa /login para autenticarte de nuevo."
+                )
             else:
                 await query.edit_message_text(
                     "❌ Error al procesar la evaluación. Intenta de nuevo con /study"
@@ -276,14 +498,26 @@ def main():
         logger.error("❌ TELEGRAM_BOT_TOKEN no configurado en .env")
         return
 
-    logger.info("🤖 Iniciando OpositApp Bot...")
+    logger.info("🤖 Iniciando OpositApp Bot con autenticación JWT...")
 
     # Crear aplicación
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
+    # Conversación de login
+    login_handler = ConversationHandler(
+        entry_points=[CommandHandler("login", login_start)],
+        states={
+            LOGIN_USERNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_username)],
+            LOGIN_PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, login_password)],
+        },
+        fallbacks=[CommandHandler("cancel", login_cancel)],
+    )
+
     # Registrar handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(login_handler)
+    application.add_handler(CommandHandler("logout", logout_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("study", study_command))
     application.add_handler(CallbackQueryHandler(button_callback))
@@ -291,6 +525,7 @@ def main():
     # Iniciar bot
     logger.info("✅ Bot iniciado correctamente")
     logger.info(f"📡 Conectado a API: {API_URL}")
+    logger.info("🔐 Sistema de autenticación JWT activo")
     logger.info("⏳ Esperando mensajes...")
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
