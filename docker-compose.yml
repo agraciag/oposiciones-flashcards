@@ -18,7 +18,8 @@ services:
       - "5399:5432"  # Puerto 5399 en host → 5432 en container
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d  # Scripts de inicialización
+      # Comentado temporalmente por problemas de bind mount en WSL
+      # - ./init-scripts:/docker-entrypoint-initdb.d  # Scripts de inicialización
     networks:
       - oposit-network
     healthcheck:
