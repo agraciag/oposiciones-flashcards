@@ -173,7 +173,7 @@ export default function NewCardPage() {
               value={formData.deck_id}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             >
               {decks.map((deck) => (
                 <option key={deck.id} value={deck.id}>
@@ -195,7 +195,7 @@ export default function NewCardPage() {
               required
               rows={3}
               placeholder="Ej: Art. 15 CE - ¿Qué derechos fundamentales protege?"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none outline-none placeholder:text-gray-400"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function NewCardPage() {
               required
               rows={5}
               placeholder="Ej: Derecho a la vida y a la integridad física y moral..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none outline-none placeholder:text-gray-400"
             />
           </div>
 
@@ -227,7 +227,7 @@ export default function NewCardPage() {
                 value={formData.article_number}
                 onChange={handleChange}
                 placeholder="Ej: Art. 15"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder:text-gray-400"
               />
             </div>
             <div>
@@ -240,7 +240,7 @@ export default function NewCardPage() {
                 value={formData.law_name}
                 onChange={handleChange}
                 placeholder="Ej: Constitución Española"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function NewCardPage() {
               value={formData.tags}
               onChange={handleChange}
               placeholder="Ej: derechos-fundamentales, vida, integridad"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none placeholder:text-gray-400"
             />
           </div>
 
