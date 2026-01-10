@@ -43,9 +43,9 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">🧠 OpositApp</h1>
-        <h2 className="text-xl font-semibold text-center text-gray-700 mb-6">Iniciar Sesión</h2>
+      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8">🧠 OpositApp</h1>
+        <h2 className="text-xl font-semibold text-center text-gray-700 dark:text-gray-300 mb-6">Iniciar Sesión</h2>
         
         {error && (
           <div className="p-3 mb-6 text-sm text-red-700 bg-red-100 rounded-lg">
@@ -55,22 +55,22 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-700">Usuario</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Usuario</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
               required
             />
           </div>
           <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium text-gray-700">Contraseña</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
               required
             />
           </div>
@@ -83,9 +83,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-gray-600">
+        <p className="mt-8 text-center text-gray-600 dark:text-gray-400">
           ¿No tienes cuenta?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
+          <Link href="/register" className="text-blue-600 dark:text-blue-400 hover:underline">
             Regístrate aquí
           </Link>
         </p>

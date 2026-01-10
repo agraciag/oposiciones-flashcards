@@ -10,7 +10,7 @@ import uvicorn
 
 from config import settings
 from database import engine, Base
-from routers import flashcards, decks, study, auth, legislation
+from routers import flashcards, decks, study, auth, legislation, profile
 
 
 @asynccontextmanager
@@ -46,6 +46,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
 app.include_router(flashcards.router, prefix="/api/flashcards", tags=["flashcards"])
 app.include_router(study.router, prefix="/api/study", tags=["study"])

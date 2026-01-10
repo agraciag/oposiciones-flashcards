@@ -77,7 +77,7 @@ export default function NewDeckPage() {
               onChange={handleChange}
               required
               placeholder="Ej: Tema 1 - Constitución Española"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
             />
           </div>
 
@@ -92,7 +92,7 @@ export default function NewDeckPage() {
               onChange={handleChange}
               rows={4}
               placeholder="Describe el contenido de este mazo..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
             />
           </div>
 

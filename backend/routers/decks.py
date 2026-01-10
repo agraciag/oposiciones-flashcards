@@ -2,7 +2,7 @@
 Router para gestión de decks (mazos)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from datetime import datetime
 from database import get_db
 from models import Deck, User, Flashcard
 from auth_utils import get_current_user
+from services.pdf_service import extract_text_from_pdf, generate_flashcards_from_text
 
 router = APIRouter()
 
@@ -177,3 +178,100 @@ def delete_deck(
     db.delete(deck)
     db.commit()
     return {"message": "Deck eliminado"}
+
+
+@router.post("/import-pdf")
+async def import_pdf_preview(
+    file: UploadFile = File(...),
+    deck_name: str = Form(...),
+    description: str = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Importar PDF y generar preview de flashcards con IA
+    NO guarda nada en la base de datos, solo retorna preview
+    """
+    # Validar tipo de archivo
+    if not file.filename.endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+
+    # Validar tamaño (10MB máximo)
+    file_bytes = await file.read()
+    if len(file_bytes) > 10 * 1024 * 1024:  # 10MB
+        raise HTTPException(status_code=400, detail="El archivo es demasiado grande (máximo 10MB)")
+
+    # Extraer texto del PDF
+    try:
+        text = extract_text_from_pdf(file_bytes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="El PDF no contiene texto extraíble")
+
+    # Generar flashcards con IA
+    try:
+        flashcards_data = await generate_flashcards_from_text(text, deck_name)
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar flashcards: {str(e)}")
+
+    # Retornar preview (NO guardar en DB todavía)
+    return {
+        "deck_name": deck_name,
+        "description": description,
+        "flashcards_preview": flashcards_data,
+        "total_flashcards": len(flashcards_data),
+        "extracted_text_length": len(text)
+    }
+
+
+class FlashcardImport(BaseModel):
+    """Schema para flashcard en importación"""
+    front: str
+    back: str
+    tags: str | None = None
+
+
+class PDFImportConfirm(BaseModel):
+    """Schema para confirmar importación de PDF"""
+    deck_name: str
+    description: str | None = None
+    flashcards: List[FlashcardImport]
+
+
+@router.post("/import-pdf/confirm", response_model=DeckResponse)
+def confirm_pdf_import(
+    data: PDFImportConfirm,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Guardar flashcards generadas por IA después de confirmación del usuario
+    """
+    if not data.flashcards:
+        raise HTTPException(status_code=400, detail="No hay flashcards para guardar")
+
+    # Crear deck
+    deck = Deck(
+        user_id=current_user.id,
+        name=data.deck_name,
+        description=data.description,
+        is_public=False
+    )
+    db.add(deck)
+    db.flush()  # Obtener ID del deck
+
+    # Crear flashcards
+    for card_data in data.flashcards:
+        flashcard = Flashcard(
+            deck_id=deck.id,
+            front=card_data.front,
+            back=card_data.back,
+            tags=card_data.tags or ""
+        )
+        db.add(flashcard)
+
+    db.commit()
+    db.refresh(deck)
+    return deck

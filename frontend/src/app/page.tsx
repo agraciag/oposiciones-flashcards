@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
 
@@ -82,47 +83,56 @@ export default function Home() {
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               🧠 OpositApp
             </h1>
-            <p className="text-gray-600">
-              Bienvenido de nuevo, <span className="font-semibold text-blue-600">{user?.username}</span>
+            <p className="text-gray-600 dark:text-gray-400">
+              Bienvenido de nuevo, <span className="font-semibold text-blue-600 dark:text-blue-400">{user?.username}</span>
             </p>
           </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-          >
-            Cerrar Sesión
-          </button>
+          <div className="flex gap-3 items-center">
+            <ThemeToggle />
+            <Link
+              href="/profile"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              ⚙️ Mi Perfil
+            </Link>
+            <button
+              onClick={logout}
+              className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats.total_cards}
               </div>
-              <div className="text-sm text-gray-600">Total Tarjetas</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Tarjetas</div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 {stats.cards_to_review}
               </div>
-              <div className="text-sm text-gray-600">Para Revisar</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Para Revisar</div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {stats.cards_learning}
               </div>
-              <div className="text-sm text-gray-600">Aprendiendo</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Aprendiendo</div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {stats.cards_mastered}
               </div>
-              <div className="text-sm text-gray-600">Dominadas</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Dominadas</div>
             </div>
           </div>
         )}
@@ -143,7 +153,7 @@ export default function Home() {
           </Link>
           <Link
             href="/decks"
-            className="bg-white hover:bg-gray-50 text-gray-900 font-semibold py-3 px-6 rounded-lg shadow-md border-2 border-gray-200 transition-colors"
+            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 font-semibold py-3 px-6 rounded-lg shadow-md border-2 border-gray-200 dark:border-gray-600 transition-colors"
           >
             📑 Mis Mazos
           </Link>
@@ -152,6 +162,12 @@ export default function Home() {
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors"
           >
             ➕ Nueva Tarjeta
+          </Link>
+          <Link
+            href="/decks/import"
+            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors"
+          >
+            📄 Importar PDF
           </Link>
         </div>
 
