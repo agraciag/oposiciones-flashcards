@@ -5,12 +5,13 @@ Router para gestión de flashcards
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from database import get_db
 from models import Flashcard, Deck, User
 from auth_utils import get_current_user
+from services.ai_card_generator import generate_cards_from_text
 
 router = APIRouter()
 
@@ -151,21 +152,68 @@ def update_flashcard(
 
 @router.delete("/{flashcard_id}")
 def delete_flashcard(
-    flashcard_id: int, 
+    flashcard_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Eliminar flashcard"""
     result = db.query(Flashcard, Deck).join(Deck).filter(Flashcard.id == flashcard_id).first()
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Flashcard no encontrada")
-    
+
     flashcard, deck = result
 
     if deck.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="No puedes eliminar esta tarjeta")
-    
+
     db.delete(flashcard)
     db.commit()
     return {"message": "Flashcard eliminada"}
+
+
+class TextGenerationRequest(BaseModel):
+    """Schema para generar flashcards desde texto"""
+    text: str = Field(..., min_length=10, max_length=15000)
+    deck_context: str = Field(default="", max_length=200)
+    max_cards: int = Field(default=10, ge=1, le=20)
+
+
+class GeneratedFlashcard(BaseModel):
+    """Schema para flashcard generada (preview)"""
+    front: str
+    back: str
+    tags: str | None = None
+    article_number: str | None = None
+    law_name: str | None = None
+
+
+@router.post("/generate-from-text", response_model=List[GeneratedFlashcard])
+async def generate_flashcards_from_text(
+    data: TextGenerationRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generar flashcards desde texto usando IA.
+    Retorna preview de las flashcards generadas (NO las guarda en DB).
+    """
+    try:
+        # Generar flashcards con IA
+        generated_cards = await generate_cards_from_text(
+            text=data.text,
+            context=data.deck_context,
+            max_cards=data.max_cards
+        )
+
+        return generated_cards
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al generar flashcards: {str(e)}"
+        )
