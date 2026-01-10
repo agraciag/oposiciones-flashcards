@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -84,12 +85,11 @@ export default function RegisterPage() {
           </div>
           <div className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-3 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+              className="w-full p-3 pr-12 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
               required
             />
           </div>

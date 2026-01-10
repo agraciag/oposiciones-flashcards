@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7999";
 
@@ -164,13 +165,13 @@ export default function ProfilePage() {
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 Contraseña Actual (para confirmar)
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={emailForm.current_password}
                 onChange={(e) =>
                   setEmailForm({ ...emailForm, current_password: e.target.value })
                 }
-                className="w-full p-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                className="w-full p-3 pr-12 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -206,13 +207,13 @@ export default function ProfilePage() {
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 Contraseña Actual
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwordForm.current_password}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, current_password: e.target.value })
                 }
-                className="w-full p-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                className="w-full p-3 pr-12 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -221,15 +222,15 @@ export default function ProfilePage() {
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 Nueva Contraseña
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwordForm.new_password}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, new_password: e.target.value })
                 }
-                className="w-full p-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
-                required
+                className="w-full p-3 pr-12 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                autoComplete="new-password"
                 minLength={6}
+                required
               />
               <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
             </div>
@@ -238,13 +239,13 @@ export default function ProfilePage() {
               <label className="block mb-2 text-sm font-medium text-gray-700">
                 Confirmar Nueva Contraseña
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={passwordForm.confirm_new_password}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, confirm_new_password: e.target.value })
                 }
-                className="w-full p-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                className="w-full p-3 pr-12 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-400"
+                autoComplete="new-password"
                 required
               />
             </div>
