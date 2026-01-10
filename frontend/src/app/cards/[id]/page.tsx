@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -12,6 +13,7 @@ interface Deck {
 }
 
 export default function EditCardPage() {
+  const { token } = useAuth();
   const router = useRouter();
   const params = useParams();
   const cardId = params.id;
@@ -31,15 +33,33 @@ export default function EditCardPage() {
   });
 
   useEffect(() => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     const fetchData = async () => {
+      if (!token) return;
+
       try {
         // Fetch decks first
-        const decksRes = await fetch(`${API_URL}/api/decks/`);
+        const decksRes = await fetch(`${API_URL}/api/decks/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!decksRes.ok) throw new Error("Error al obtener mazos");
         const decksData = await decksRes.json();
-        setDecks(decksData);
+        setDecks(Array.isArray(decksData) ? decksData : []);
 
         // Fetch card details
-        const cardRes = await fetch(`${API_URL}/api/flashcards/${cardId}`);
+        const cardRes = await fetch(`${API_URL}/api/flashcards/${cardId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (!cardRes.ok) throw new Error("Card not found");
         const cardData = await cardRes.json();
         
@@ -63,10 +83,12 @@ export default function EditCardPage() {
     if (cardId) {
       fetchData();
     }
-  }, [cardId]);
+  }, [cardId, token, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
+
     setSubmitting(true);
 
     try {
@@ -74,6 +96,7 @@ export default function EditCardPage() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           front: formData.front,

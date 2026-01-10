@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7999';
@@ -13,20 +15,38 @@ interface Deck {
 }
 
 export default function DecksPage() {
+  const { token } = useAuth();
+  const router = useRouter();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
     fetchDecks();
-  }, []);
+  }, [token, router]);
 
   const fetchDecks = async () => {
+    if (!token) return;
+
     try {
-      const response = await fetch(`${API_URL}/api/decks/`);
+      const response = await fetch(`${API_URL}/api/decks/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener los mazos");
+      }
+
       const data = await response.json();
-      setDecks(data);
+      setDecks(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching decks:", error);
+      setDecks([]);
     } finally {
       setLoading(false);
     }

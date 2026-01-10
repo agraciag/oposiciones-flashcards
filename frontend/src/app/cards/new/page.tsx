@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -12,6 +13,7 @@ interface Deck {
 }
 
 export default function NewCardPage() {
+  const { token } = useAuth();
   const router = useRouter();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,19 +29,35 @@ export default function NewCardPage() {
   });
 
   useEffect(() => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
     fetchDecks();
-  }, []);
+  }, [token, router]);
 
   const fetchDecks = async () => {
+    if (!token) return;
+
     try {
-      const response = await fetch(`${API_URL}/api/decks/`);
+      const response = await fetch(`${API_URL}/api/decks/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener los mazos");
+      }
+
       const data = await response.json();
-      setDecks(data);
+      setDecks(Array.isArray(data) ? data : []);
       if (data.length > 0) {
         setFormData((prev) => ({ ...prev, deck_id: data[0].id.toString() }));
       }
     } catch (error) {
       console.error("Error fetching decks:", error);
+      setDecks([]);
     } finally {
       setLoading(false);
     }
@@ -47,6 +65,8 @@ export default function NewCardPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
+
     setSubmitting(true);
 
     try {
@@ -54,6 +74,7 @@ export default function NewCardPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           deck_id: parseInt(formData.deck_id),
