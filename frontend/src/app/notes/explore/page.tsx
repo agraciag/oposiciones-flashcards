@@ -15,7 +15,7 @@ interface NoteCollection {
   updated_at: string | null;
 }
 
-export default function NotesPage() {
+export default function ExploreNotesPage() {
   const router = useRouter();
   const { token } = useAuth();
   const [collections, setCollections] = useState<NoteCollection[]>([]);
@@ -24,19 +24,19 @@ export default function NotesPage() {
   const [filterType, setFilterType] = useState<string>('all');
 
   useEffect(() => {
-    fetchCollections();
+    fetchPublicCollections();
   }, [token]);
 
-  const fetchCollections = async () => {
+  const fetchPublicCollections = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:7999/api/notes/collections', {
+      const response = await fetch('http://localhost:7999/api/notes/collections/public', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error('Error al cargar colecciones');
+      if (!response.ok) throw new Error('Error al cargar colecciones públicas');
 
       const data = await response.json();
       setCollections(data);
@@ -44,25 +44,6 @@ export default function NotesPage() {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const deleteCollection = async (id: number) => {
-    if (!confirm('¿Estás seguro de eliminar esta colección?')) return;
-
-    try {
-      const response = await fetch(`http://localhost:7999/api/notes/collections/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Error al eliminar colección');
-
-      setCollections(collections.filter((c) => c.id !== id));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al eliminar');
     }
   };
 
@@ -80,7 +61,7 @@ export default function NotesPage() {
       if (!response.ok) throw new Error('Error al clonar colección');
 
       const newCollection = await response.json();
-      alert(`Colección clonada: ${newCollection.name}`);
+      alert(`✓ Colección clonada: ${newCollection.name}`);
       router.push(`/notes/${newCollection.id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al clonar');
@@ -118,7 +99,7 @@ export default function NotesPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Cargando colecciones...</p>
+          <p className="text-gray-600 dark:text-gray-400">Cargando colecciones públicas...</p>
         </div>
       </div>
     );
@@ -130,42 +111,27 @@ export default function NotesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              Mis Apuntes
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Organiza tu contenido en colecciones de temario y normativa
+            <div className="flex items-center gap-3 mb-2">
+              <button
+                onClick={() => router.push('/notes')}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                Explorar Colecciones Públicas
+              </h1>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 ml-14">
+              Descubre y clona colecciones compartidas por la comunidad
             </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push('/notes/explore')}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              Explorar Públicas
-            </button>
-            <button
-              onClick={() => router.push('/notes/new')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Nueva Colección
-            </button>
           </div>
         </div>
 
@@ -223,29 +189,22 @@ export default function NotesPage() {
         {/* Collections Grid */}
         {filteredCollections.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <div className="text-6xl mb-4">📚</div>
+            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              No hay colecciones
+              No hay colecciones públicas
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 dark:text-gray-400">
               {filterType === 'all'
-                ? 'Crea tu primera colección de apuntes'
-                : `No tienes colecciones de tipo ${getTypeName(filterType)}`}
+                ? 'Aún no hay colecciones compartidas por la comunidad'
+                : `No hay colecciones públicas de tipo ${getTypeName(filterType)}`}
             </p>
-            <button
-              onClick={() => router.push('/notes/new')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Crear Colección
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCollections.map((collection) => (
               <div
                 key={collection.id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
-                onClick={() => router.push(`/notes/${collection.id}`)}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -260,37 +219,37 @@ export default function NotesPage() {
                     </div>
                   </div>
 
-                  {collection.is_public && (
-                    <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded-full">
-                      Público
-                    </span>
-                  )}
+                  <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 px-2 py-1 rounded-full">
+                    Público
+                  </span>
                 </div>
 
                 {collection.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
                     {collection.description}
                   </p>
                 )}
 
                 <div className="flex gap-2 mt-4">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/notes/${collection.id}`);
-                    }}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    onClick={() => router.push(`/notes/${collection.id}`)}
+                    className="flex-1 px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
-                    Ver
+                    Vista Previa
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteCollection(collection.id);
-                    }}
-                    className="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                    onClick={() => cloneCollection(collection.id)}
+                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    Eliminar
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Clonar
                   </button>
                 </div>
 

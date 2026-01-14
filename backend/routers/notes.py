@@ -163,7 +163,8 @@ def get_my_notes(
     current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
-    tags: Optional[str] = None
+    tags: Optional[str] = None,
+    search: Optional[str] = None
 ):
     """Obtener mis notas con filtros opcionales"""
     query = db.query(Note).filter(Note.user_id == current_user.id)
@@ -171,6 +172,15 @@ def get_my_notes(
     if tags:
         # Filtrar por tags (búsqueda simple)
         query = query.filter(Note.tags.contains(tags))
+
+    if search:
+        # Búsqueda en título y contenido
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (Note.title.ilike(search_pattern)) |
+            (Note.content.ilike(search_pattern)) |
+            (Note.article_number.ilike(search_pattern))
+        )
 
     notes = query.offset(skip).limit(limit).all()
     return notes
@@ -353,6 +363,83 @@ def delete_collection(
     return None
 
 
+@router.post("/collections/{collection_id}/clone", response_model=NoteCollectionResponse, status_code=status.HTTP_201_CREATED)
+def clone_collection(
+    collection_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Clonar una colección pública"""
+    # Verificar que la colección existe y es pública
+    source_collection = db.query(NoteCollection).filter(NoteCollection.id == collection_id).first()
+    if not source_collection:
+        raise HTTPException(status_code=404, detail="Colección no encontrada")
+
+    if not source_collection.is_public and source_collection.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No puedes clonar una colección privada")
+
+    # Crear nueva colección
+    new_collection = NoteCollection(
+        user_id=current_user.id,
+        name=f"{source_collection.name} (copia)",
+        description=source_collection.description,
+        collection_type=source_collection.collection_type,
+        is_public=False  # Las copias son privadas por defecto
+    )
+    db.add(new_collection)
+    db.commit()
+    db.refresh(new_collection)
+
+    # Obtener todas las notas de la colección original
+    hierarchies = db.query(NoteHierarchy).filter(
+        NoteHierarchy.collection_id == collection_id
+    ).all()
+
+    # Mapeo de IDs antiguos a nuevos para mantener las relaciones padre-hijo
+    hierarchy_id_map = {}
+
+    # Clonar notas y crear nuevas jerarquías
+    for hierarchy in hierarchies:
+        # Obtener la nota original
+        original_note = db.query(Note).filter(Note.id == hierarchy.note_id).first()
+
+        # Crear copia de la nota
+        new_note = Note(
+            user_id=current_user.id,
+            title=original_note.title,
+            content=original_note.content,
+            note_type=original_note.note_type,
+            tags=original_note.tags,
+            legal_reference=original_note.legal_reference,
+            article_number=original_note.article_number
+        )
+        db.add(new_note)
+        db.commit()
+        db.refresh(new_note)
+
+        # Determinar el parent_id correcto usando el mapeo
+        new_parent_id = None
+        if hierarchy.parent_id:
+            new_parent_id = hierarchy_id_map.get(hierarchy.parent_id)
+
+        # Crear nueva jerarquía
+        new_hierarchy = NoteHierarchy(
+            collection_id=new_collection.id,
+            note_id=new_note.id,
+            parent_id=new_parent_id,
+            order_index=hierarchy.order_index,
+            is_featured=hierarchy.is_featured
+        )
+        db.add(new_hierarchy)
+        db.commit()
+        db.refresh(new_hierarchy)
+
+        # Guardar el mapeo de IDs
+        hierarchy_id_map[hierarchy.id] = new_hierarchy.id
+
+    return new_collection
+
+
 # ============================================================================
 # ENDPOINTS - HIERARCHIES
 # ============================================================================
@@ -531,3 +618,89 @@ def get_collection_tree(
     # Construir árbol desde la raíz (parent_id = None)
     tree = build_tree_recursive(hierarchies_dict, parent_id=None)
     return tree
+
+
+@router.get("/collections/{collection_id}/export")
+def export_collection_markdown(
+    collection_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Exportar colección a formato Markdown"""
+    from fastapi.responses import PlainTextResponse
+
+    # Verificar acceso a la colección
+    collection = db.query(NoteCollection).filter(NoteCollection.id == collection_id).first()
+    if not collection:
+        raise HTTPException(status_code=404, detail="Colección no encontrada")
+
+    if collection.user_id != current_user.id and not collection.is_public:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta colección")
+
+    # Obtener todas las jerarquías con sus notas
+    hierarchies = db.query(NoteHierarchy, Note).join(
+        Note, NoteHierarchy.note_id == Note.id
+    ).filter(
+        NoteHierarchy.collection_id == collection_id
+    ).order_by(NoteHierarchy.order_index).all()
+
+    # Construir markdown
+    markdown_lines = [
+        f"# {collection.name}",
+        "",
+    ]
+
+    if collection.description:
+        markdown_lines.extend([
+            collection.description,
+            "",
+        ])
+
+    markdown_lines.extend([
+        "---",
+        "",
+    ])
+
+    # Función para construir el markdown recursivamente
+    def build_markdown(parent_id=None, level=0):
+        for hierarchy, note in hierarchies:
+            if hierarchy.parent_id == parent_id:
+                prefix = "#" * min(level + 2, 6)
+
+                # Añadir título con nivel apropiado
+                markdown_lines.append(f"{prefix} {note.title}")
+
+                # Añadir metadatos si existen
+                if note.article_number or note.legal_reference:
+                    markdown_lines.append("")
+                    if note.article_number:
+                        markdown_lines.append(f"**Artículo**: {note.article_number}")
+                    if note.legal_reference:
+                        markdown_lines.append(f"**Referencia**: {note.legal_reference}")
+
+                # Añadir contenido si existe
+                if note.content:
+                    markdown_lines.extend(["", note.content])
+
+                # Destacar si es featured
+                if hierarchy.is_featured:
+                    markdown_lines.append("")
+                    markdown_lines.append("> ⭐ **Importante para examen**")
+
+                markdown_lines.extend(["", "---", ""])
+
+                # Recursión para hijos
+                build_markdown(hierarchy.id, level + 1)
+
+    build_markdown()
+
+    # Unir todas las líneas
+    markdown_content = "\n".join(markdown_lines)
+
+    return PlainTextResponse(
+        content=markdown_content,
+        media_type="text/markdown",
+        headers={
+            "Content-Disposition": f'attachment; filename="{collection.name}.md"'
+        }
+    )

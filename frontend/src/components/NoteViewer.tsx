@@ -1,5 +1,8 @@
 'use client';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 export interface Note {
   id: number;
   user_id: number;
@@ -48,51 +51,6 @@ export default function NoteViewer({
       </div>
     );
   }
-
-  const renderContent = (content: string | null) => {
-    if (!content) return null;
-
-    // Simple markdown-like rendering (basic)
-    // Para un renderizado completo se podría usar react-markdown
-    return content.split('\n').map((line, i) => {
-      // Headers
-      if (line.startsWith('### ')) {
-        return <h3 key={i} className="text-lg font-semibold mt-4 mb-2">{line.substring(4)}</h3>;
-      }
-      if (line.startsWith('## ')) {
-        return <h2 key={i} className="text-xl font-semibold mt-5 mb-3">{line.substring(3)}</h2>;
-      }
-      if (line.startsWith('# ')) {
-        return <h1 key={i} className="text-2xl font-bold mt-6 mb-4">{line.substring(2)}</h1>;
-      }
-
-      // Bullet points
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-        return <li key={i} className="ml-6 mb-1">{line.trim().substring(2)}</li>;
-      }
-
-      // Bold
-      const boldRegex = /\*\*(.+?)\*\*/g;
-      if (boldRegex.test(line)) {
-        const parts = line.split(boldRegex);
-        return (
-          <p key={i} className="mb-2">
-            {parts.map((part, j) =>
-              j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-            )}
-          </p>
-        );
-      }
-
-      // Empty lines
-      if (line.trim() === '') {
-        return <br key={i} />;
-      }
-
-      // Normal paragraph
-      return <p key={i} className="mb-2">{line}</p>;
-    });
-  };
 
   const tagsList = note.tags ? note.tags.split(',').map(t => t.trim()) : [];
 
@@ -191,11 +149,25 @@ export default function NoteViewer({
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto prose dark:prose-invert max-w-none">
+      {/* Content with react-markdown */}
+      <div className="flex-1 overflow-y-auto">
         {note.content ? (
-          <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
-            {renderContent(note.content)}
+          <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none
+            prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-gray-100
+            prose-p:text-gray-800 dark:prose-p:text-gray-200
+            prose-a:text-blue-600 dark:prose-a:text-blue-400
+            prose-strong:text-gray-900 dark:prose-strong:text-gray-100
+            prose-code:text-pink-600 dark:prose-code:text-pink-400
+            prose-code:bg-gray-100 dark:prose-code:bg-gray-800
+            prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+            prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950
+            prose-blockquote:border-l-blue-500 dark:prose-blockquote:border-l-blue-400
+            prose-li:text-gray-800 dark:prose-li:text-gray-200
+            prose-table:text-gray-800 dark:prose-table:text-gray-200
+          ">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {note.content}
+            </ReactMarkdown>
           </div>
         ) : (
           <p className="text-gray-500 dark:text-gray-400 italic">

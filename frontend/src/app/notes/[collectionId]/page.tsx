@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import NotesTree, { NoteTreeNode } from '@/components/NotesTree';
 import NoteViewer, { Note } from '@/components/NoteViewer';
 import NoteEditor, { NoteFormData } from '@/components/NoteEditor';
+import NoteSearch from '@/components/NoteSearch';
 
 interface Collection {
   id: number;
@@ -282,12 +283,20 @@ export default function CollectionPage() {
             transition-all duration-300 overflow-hidden
           `}
         >
-          <div className="h-full overflow-y-auto p-4">
-            <NotesTree
-              tree={tree}
-              onSelectNote={handleSelectNote}
-              selectedNoteId={selectedNoteId}
-            />
+          <div className="h-full flex flex-col">
+            {/* Search */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <NoteSearch onSelectNote={handleSelectNote} />
+            </div>
+
+            {/* Tree */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <NotesTree
+                tree={tree}
+                onSelectNote={handleSelectNote}
+                selectedNoteId={selectedNoteId}
+              />
+            </div>
           </div>
         </div>
 

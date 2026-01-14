@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export interface NoteFormData {
   title: string;
@@ -69,38 +71,14 @@ export default function NoteEditor({
   const renderPreview = (content: string) => {
     if (!content) return <p className="text-gray-400 italic">Sin contenido</p>;
 
-    return content.split('\n').map((line, i) => {
-      if (line.startsWith('### ')) {
-        return <h3 key={i} className="text-lg font-semibold mt-4 mb-2">{line.substring(4)}</h3>;
-      }
-      if (line.startsWith('## ')) {
-        return <h2 key={i} className="text-xl font-semibold mt-5 mb-3">{line.substring(3)}</h2>;
-      }
-      if (line.startsWith('# ')) {
-        return <h1 key={i} className="text-2xl font-bold mt-6 mb-4">{line.substring(2)}</h1>;
-      }
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-        return <li key={i} className="ml-6 mb-1">{line.trim().substring(2)}</li>;
-      }
-
-      const boldRegex = /\*\*(.+?)\*\*/g;
-      if (boldRegex.test(line)) {
-        const parts = line.split(boldRegex);
-        return (
-          <p key={i} className="mb-2">
-            {parts.map((part, j) =>
-              j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-            )}
-          </p>
-        );
-      }
-
-      if (line.trim() === '') {
-        return <br key={i} />;
-      }
-
-      return <p key={i} className="mb-2">{line}</p>;
-    });
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        className="prose prose-sm md:prose-base dark:prose-invert max-w-none"
+      >
+        {content}
+      </ReactMarkdown>
+    );
   };
 
   return (
