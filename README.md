@@ -4,6 +4,7 @@
 
 Sistema completo de estudio con:
 - ✅ Repetición espaciada (algoritmo SM-2)
+- ✅ **Sistema de Apuntes con contenido reutilizable** 📝
 - ✅ Autenticación JWT multi-usuario
 - ✅ Mazos públicos compartibles y clonables
 - ✅ Bot Telegram integrado
@@ -23,6 +24,46 @@ OpositApp ahora es **multi-usuario**. Cada opositor tiene su propia cuenta y pue
 
 **Primera vez:** Regístrate en http://localhost:2998/register
 **Ya tienes cuenta:** Login en http://localhost:2998/login
+
+---
+
+## 📝 Sistema de Apuntes
+
+OpositApp incluye un potente **sistema de apuntes con contenido reutilizable** que te permite organizar tu material de estudio sin duplicación.
+
+### Características Principales
+
+- 🌳 **Estructura jerárquica**: Organiza apuntes en árbol colapsable
+- ♻️ **Contenido reutilizable**: Una misma nota puede aparecer en múltiples colecciones
+- 📚 **Tipos de colecciones**: Temario, Normativa, Personalizado
+- ⭐ **Notas destacadas**: Marca contenido importante
+- 🔗 **Referencias desde flashcards**: Vincula tarjetas con apuntes
+- ⚖️ **Metadatos legislativos**: Artículos, referencias BOE
+- 📄 **Soporte Markdown**: Formato básico para notas
+
+### Ejemplo de Uso
+
+```
+Colección "Temario Tema 1"          Colección "Constitución Completa"
+├─ 1. La Constitución                ├─ Título Preliminar
+│  ├─ 1.1 Antecedentes ⭐            │  ├─ Artículo 1 ⭐
+│  └─ 1.2 Estructura                 │  ├─ Artículo 2
+└─ 2. Derechos Fundamentales         │  └─ Artículo 15 ⭐ <- MISMO CONTENIDO
+   └─ 2.1 Art. 15 ⭐ <---------------┘
+```
+
+### Acceso Rápido
+
+- **Ver colecciones**: http://localhost:2998/notes
+- **Crear colección**: http://localhost:2998/notes/new
+- **Documentación completa**: [docs/NOTES_SYSTEM.md](./docs/NOTES_SYSTEM.md)
+
+### Inicializar con Datos de Ejemplo
+
+```bash
+cd backend
+python seed_notes.py
+```
 
 ---
 
