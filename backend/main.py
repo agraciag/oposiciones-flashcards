@@ -10,7 +10,7 @@ import uvicorn
 
 from config import settings
 from database import engine, Base
-from routers import flashcards, decks, study, auth, legislation, profile
+from routers import flashcards, decks, study, auth, legislation, profile, notes
 
 
 @asynccontextmanager
@@ -51,6 +51,7 @@ app.include_router(decks.router, prefix="/api/decks", tags=["decks"])
 app.include_router(flashcards.router, prefix="/api/flashcards", tags=["flashcards"])
 app.include_router(study.router, prefix="/api/study", tags=["study"])
 app.include_router(legislation.router, prefix="/api/legislation", tags=["legislation"])
+app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
 
 
 @app.get("/")

@@ -25,6 +25,7 @@ class FlashcardCreate(BaseModel):
     legal_reference: str | None = None
     article_number: str | None = None
     law_name: str | None = None
+    note_id: int | None = None  # Referencia a nota/apunte
 
 
 class FlashcardResponse(BaseModel):
@@ -34,6 +35,7 @@ class FlashcardResponse(BaseModel):
     front: str
     back: str
     tags: str | None
+    note_id: int | None  # Referencia a nota/apunte
     repetitions: int
     easiness_factor: float
     interval_days: int
@@ -51,6 +53,7 @@ class FlashcardUpdate(BaseModel):
     legal_reference: str | None = None
     article_number: str | None = None
     law_name: str | None = None
+    note_id: int | None = None  # Referencia a nota/apunte
 
 
 @router.post("/", response_model=FlashcardResponse)

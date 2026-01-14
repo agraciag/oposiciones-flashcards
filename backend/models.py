@@ -19,6 +19,19 @@ class StudyQuality(str, enum.Enum):
     EASY = "easy"        # 4 - Fácil
 
 
+class NoteType(str, enum.Enum):
+    """Tipo de nota"""
+    SECTION = "section"    # Sección/encabezado sin contenido propio
+    CONTENT = "content"    # Contenido real (texto, markdown)
+
+
+class CollectionType(str, enum.Enum):
+    """Tipo de colección de notas"""
+    TEMARIO = "temario"        # Temario de oposición
+    NORMATIVA = "normativa"    # Normativa completa
+    CUSTOM = "custom"          # Colección personalizada
+
+
 class User(Base):
     """Usuario del sistema"""
     __tablename__ = "users"
@@ -35,6 +48,8 @@ class User(Base):
     # Relaciones
     decks = relationship("Deck", back_populates="user", cascade="all, delete-orphan")
     study_sessions = relationship("StudySession", back_populates="user")
+    notes = relationship("Note", back_populates="user", cascade="all, delete-orphan")
+    note_collections = relationship("NoteCollection", back_populates="user", cascade="all, delete-orphan")
 
 
 class Deck(Base):
@@ -80,6 +95,9 @@ class Flashcard(Base):
     law_name = Column(String, nullable=True)         # Ej: "Constitución Española"
     last_verified = Column(DateTime(timezone=True), nullable=True)  # Última verificación BOE
 
+    # Referencia a notas/apuntes (opcional)
+    note_id = Column(Integer, ForeignKey("notes.id"), nullable=True)
+
     # Algoritmo SM-2
     repetitions = Column(Integer, default=0)
     easiness_factor = Column(Float, default=2.5)
@@ -92,6 +110,7 @@ class Flashcard(Base):
     # Relaciones
     deck = relationship("Deck", back_populates="flashcards")
     study_logs = relationship("StudyLog", back_populates="flashcard")
+    note = relationship("Note", back_populates="flashcards")
 
 
 class StudySession(Base):
@@ -164,3 +183,78 @@ class LegislationUpdate(Base):
 
     detected_at = Column(DateTime(timezone=True), server_default=func.now())
     processed = Column(Boolean, default=False)
+
+
+class Note(Base):
+    """Nota/apunte de contenido reutilizable"""
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Contenido
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=True)  # Markdown o texto plano
+    note_type = Column(Enum(NoteType), default=NoteType.CONTENT, nullable=False)
+
+    # Etiquetas y metadatos
+    tags = Column(String, nullable=True)  # importante,examen,básico
+    legal_reference = Column(String, nullable=True)  # Ej: "BOE-A-1978-31229"
+    article_number = Column(String, nullable=True)   # Ej: "Art. 15 CE"
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    user = relationship("User", back_populates="notes")
+    flashcards = relationship("Flashcard", back_populates="note")
+    hierarchies = relationship("NoteHierarchy", back_populates="note", cascade="all, delete-orphan")
+
+
+class NoteCollection(Base):
+    """Colección/vista de notas (Temario, Normativa, etc.)"""
+    __tablename__ = "note_collections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Información básica
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    collection_type = Column(Enum(CollectionType), default=CollectionType.CUSTOM, nullable=False)
+
+    # Sharing features
+    is_public = Column(Boolean, default=False, index=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    user = relationship("User", back_populates="note_collections")
+    hierarchies = relationship("NoteHierarchy", back_populates="collection", cascade="all, delete-orphan")
+
+
+class NoteHierarchy(Base):
+    """Estructura de árbol que conecta notas con colecciones"""
+    __tablename__ = "note_hierarchies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    collection_id = Column(Integer, ForeignKey("note_collections.id"), nullable=False)
+    note_id = Column(Integer, ForeignKey("notes.id"), nullable=False)
+
+    # Jerarquía
+    parent_id = Column(Integer, ForeignKey("note_hierarchies.id"), nullable=True)
+    order_index = Column(Integer, default=0, nullable=False)  # Orden entre hermanos
+
+    # Características especiales
+    is_featured = Column(Boolean, default=False)  # Destacar en temario
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaciones
+    collection = relationship("NoteCollection", back_populates="hierarchies")
+    note = relationship("Note", back_populates="hierarchies")
+
+    # Self-referential relationship para árbol
+    children = relationship("NoteHierarchy", back_populates="parent", remote_side=[id])
+    parent = relationship("NoteHierarchy", back_populates="children", remote_side=[parent_id])
