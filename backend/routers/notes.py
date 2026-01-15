@@ -9,8 +9,9 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from database import get_db
-from models import Note, NoteCollection, NoteHierarchy, User, NoteType, CollectionType
+from models import Note, NoteCollection, NoteHierarchy, User, NoteType, CollectionType, Flashcard, Deck
 from auth_utils import get_current_user
+from services.ai_card_generator import generate_cards_from_text
 
 router = APIRouter()
 
@@ -704,3 +705,96 @@ def export_collection_markdown(
             "Content-Disposition": f'attachment; filename="{collection.name}.md"'
         }
     )
+
+
+@router.post("/notes/{note_id}/generate-flashcards")
+async def generate_flashcards_from_note(
+    note_id: int,
+    deck_id: int,
+    max_cards: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Generar flashcards desde una nota usando IA"""
+    # Verificar que la nota existe y pertenece al usuario
+    note = db.query(Note).filter(Note.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+    
+    if note.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta nota")
+
+    # Verificar que el deck existe y pertenece al usuario
+    deck = db.query(Deck).filter(Deck.id == deck_id).first()
+    if not deck:
+        raise HTTPException(status_code=404, detail="Deck no encontrado")
+    
+    if deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes acceso a este mazo")
+
+    # Construir texto para IA
+    text_for_ai = f"# {note.title}\n\n"
+    if note.article_number:
+        text_for_ai += f"**Artículo**: {note.article_number}\n\n"
+    if note.content:
+        text_for_ai += note.content
+
+    # Generar flashcards con IA
+    try:
+        generated_cards = await generate_cards_from_text(
+            text=text_for_ai,
+            deck_context=deck.name,
+            max_cards=max_cards
+        )
+
+        # Retornar las tarjetas generadas (sin guardar)
+        return {
+            "preview": generated_cards,
+            "note_id": note_id,
+            "deck_id": deck_id,
+            "message": "Flashcards generadas. Revisa y confirma para guardar."
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al generar flashcards: {str(e)}"
+        )
+
+
+@router.post("/notes/{note_id}/generate-flashcards/confirm")
+def confirm_generated_flashcards(
+    note_id: int,
+    flashcards: List[dict],
+    deck_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Confirmar y guardar flashcards generadas"""
+    # Verificar permisos
+    deck = db.query(Deck).filter(Deck.id == deck_id).first()
+    if not deck or deck.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes acceso a este mazo")
+
+    # Guardar flashcards
+    saved_cards = []
+    for card_data in flashcards:
+        flashcard = Flashcard(
+            deck_id=deck_id,
+            front=card_data.get("front", ""),
+            back=card_data.get("back", ""),
+            tags=card_data.get("tags"),
+            legal_reference=card_data.get("legal_reference"),
+            article_number=card_data.get("article_number"),
+            law_name=card_data.get("law_name"),
+            note_id=note_id  # Vincular con la nota
+        )
+        db.add(flashcard)
+        saved_cards.append(flashcard)
+
+    db.commit()
+
+    return {
+        "message": f"Se guardaron {len(saved_cards)} flashcards exitosamente",
+        "cards_saved": len(saved_cards)
+    }

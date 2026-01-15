@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import NotesTree, { NoteTreeNode } from '@/components/NotesTree';
+import NotesTreeDraggable from '@/components/NotesTreeDraggable';
 import NoteViewer, { Note } from '@/components/NoteViewer';
 import NoteEditor, { NoteFormData } from '@/components/NoteEditor';
 import NoteSearch from '@/components/NoteSearch';
@@ -35,6 +36,7 @@ export default function CollectionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [dragMode, setDragMode] = useState(false);
 
   useEffect(() => {
     if (collectionId && token) {
@@ -188,6 +190,81 @@ export default function CollectionPage() {
     }
   };
 
+  const handleExport = () => {
+    // Abrir en nueva pestaña para descargar
+    window.open(
+      `http://localhost:7999/api/notes/collections/${collectionId}/export`,
+      '_blank'
+    );
+  };
+
+  const handleReorder = async (hierarchyId: number, newOrderIndex: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/notes/hierarchies/${hierarchyId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ order_index: newOrderIndex }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al reordenar');
+
+      // Recargar árbol
+      await fetchTree();
+    } catch (err) {
+      console.error('Error reordering:', err);
+    }
+  };
+
+  const handleGenerateFlashcards = async (noteId: number) => {
+    const deckId = prompt('Introduce el ID del mazo donde guardar las flashcards:');
+    if (!deckId) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/notes/notes/${noteId}/generate-flashcards?deck_id=${deckId}&max_cards=5`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al generar flashcards');
+
+      const result = await response.json();
+
+      if (confirm(`Se generaron ${result.preview.length} flashcards. ¿Guardar?`)) {
+        const confirmResponse = await fetch(
+          `http://localhost:7999/api/notes/notes/${noteId}/generate-flashcards/confirm`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              flashcards: result.preview,
+              deck_id: parseInt(deckId),
+            }),
+          }
+        );
+
+        if (confirmResponse.ok) {
+          alert('✓ Flashcards guardadas exitosamente');
+        }
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al generar flashcards');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -245,6 +322,40 @@ export default function CollectionPage() {
               </svg>
             </button>
             <button
+              onClick={() => setDragMode(!dragMode)}
+              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                dragMode
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
+              title="Modo reorganizar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8h16M4 16h16"
+                />
+              </svg>
+              {dragMode ? 'Modo Normal' : 'Reorganizar'}
+            </button>
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              title="Exportar a Markdown"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Exportar
+            </button>
+            <button
               onClick={() => {
                 setSelectedNote(null);
                 setSelectedNoteId(null);
@@ -291,11 +402,20 @@ export default function CollectionPage() {
 
             {/* Tree */}
             <div className="flex-1 overflow-y-auto p-4">
-              <NotesTree
-                tree={tree}
-                onSelectNote={handleSelectNote}
-                selectedNoteId={selectedNoteId}
-              />
+              {dragMode ? (
+                <NotesTreeDraggable
+                  tree={tree}
+                  onSelectNote={handleSelectNote}
+                  selectedNoteId={selectedNoteId}
+                  onReorder={handleReorder}
+                />
+              ) : (
+                <NotesTree
+                  tree={tree}
+                  onSelectNote={handleSelectNote}
+                  selectedNoteId={selectedNoteId}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -310,6 +430,7 @@ export default function CollectionPage() {
                     note={selectedNote}
                     onEdit={(note) => setViewMode('edit')}
                     onDelete={handleDeleteNote}
+                    onGenerateFlashcards={handleGenerateFlashcards}
                   />
                 </div>
               )}
