@@ -11,7 +11,7 @@ interface Deck {
   id: number;
   name: string;
   description: string;
-  is_public: bool;
+  is_public: boolean;
   user_id: number;
   created_at: string;
 }
