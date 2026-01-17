@@ -1,0 +1,533 @@
+{
+  "Anexo_III_Técnicos de Informática": {
+    "display_name": "Anexo III Técnicos de Informática",
+    "comunes": [],
+    "especificos": []
+  },
+  "Anexo_V_Arquitectos Técnicos": {
+    "display_name": "Anexo V Arquitectos Técnicos",
+    "comunes": [
+      [
+        1,
+        "La Constitución Española de 1978: estructura y contenido. Valores superiores y principios inspiradores. El Estado Social y Democrático de Derecho. La Corona. Las Cortes Generales. El Poder Judicial. Derechos y libertades. Deberes de los ciudadanos. Principios rectores de la política social y económica. Garantías. Defensor del Pueblo."
+      ],
+      [
+        2,
+        "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+      ],
+      [
+        3,
+        "El Estatuto de Autonomía de Aragón: naturaleza y contenido. Competencias de la Comunidad Autónoma. La reforma del Estatuto. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes y el Justicia de Aragón."
+      ],
+      [
+        4,
+        "El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. Los órganos administrativos: su régimen y el ejercicio de las competencias."
+      ],
+      [
+        5,
+        "La Unión Europea. Antecedentes y evolución histórica. Las fuentes del Derecho de la Unión Europea. Las Instituciones de la Unión Europea. La participación de las Comunidades Autónomas en la aplicación del Derecho Comunitario."
+      ],
+      [
+        6,
+        "Ley del Procedimiento Administrativo Común de las Administraciones Públicas: ámbito de aplicación y principios informadores. Los interesados: capacidad y representación. Derechos de los ciudadanos en sus relaciones con las Administraciones Públicas, especial referencia a la administración electrónica. Sujetos obligados a relacionarse electrónicamente con la Administración. Identificación y firma de los interesados. Representación Procedimiento administrativo: las garantías en el desarrollo del procedimiento y las fases de iniciación, ordenación, instrucción y finalización. La transparencia de las Administraciones Públicas y acceso a la información pública."
+      ],
+      [
+        7,
+        "El acto administrativo: concepto, elementos y clases. Requisitos y eficacia de los actos administrativos. Nulidad y anulabilidad. La obligación de la Administración de resolver y notificar Silencio administrativo. Términos y plazos. Sistema de Interconexión de Registros. Notificación electrónica. Revisión de los actos administrativos."
+      ],
+      [
+        8,
+        "La responsabilidad patrimonial de la Administración Pública. Responsabilidad de las autoridades y personal a su servicio."
+      ],
+      [
+        9,
+        "El Estatuto Básico del Empleado Público. El personal funcionario de la Administración de la Comunidad Autónoma de Aragón: clases de empleados públicos, selección, provisión y carrera administrativa. Personal laboral. Integridad y Ética pública. Código de Conducta del personal empleado público. Régimen disciplinario y normativa penal relativa a la función pública."
+      ],
+      [
+        10,
+        "El presupuesto: sus principios. Estructura del presupuesto de la Comunidad Autónoma de Aragón. Los créditos y sus modificaciones. Ejecución del presupuesto. El control presupuestario."
+      ]
+    ],
+    "especificos": [
+      [
+        1,
+        "Ley de Ordenación de la Edificación. Objeto y ámbito de aplicación. Requisitos básicos de la edificación. Agentes que intervienen: concepto y obligaciones. Responsabilidades y garantías. Las atribuciones y competencias del arquitecto técnico."
+      ],
+      [
+        2,
+        "Legislación estatal en materia de régimen del suelo. Legislación urbanística en la Comunidad Autónoma de Aragón. Régimen urbanístico del suelo: situaciones, clases y categorías del suelo. Planeamiento urbanístico: instrumentos de planificación urbana. Política urbanística y de suelo. Directriz especial de urbanismo. Norma técnica de planeamiento (NOTEPA)."
+      ],
+      [
+        3,
+        "El Plan General de Ordenación Urbana. Planes parciales. Planes especiales. Otros instrumentos de ordenación urbanística: estudios de detalle, ordenanzas de edificación y de urbanización, la delimitación del suelo urbano en municipios que carezcan de plan general."
+      ],
+      [
+        4,
+        "Gestión urbanística. Alternativas de ejecución de las actuaciones urbanísticas. Aprovechamiento urbanístico. Reparcelación. Sistemas de gestión directa e indirecta. Actuaciones de rehabilitación urbana. Obtención de terrenos dotacionales. Expropiación forzosa."
+      ],
+      [
+        5,
+        "Edificación y uso del suelo. Edificación forzosa. Títulos habilitantes de naturaleza urbanística. Parcelaciones. Deber de conservación. Declaración de ruina. Disciplina urbanística. Régimen urbanístico simplificado. Autorización de construcciones e instalaciones en suelo no urbanizable. Afecciones al dominio público."
+      ],
+      [
+        6,
+        "Instrumentos de política de suelo y vivienda. Patrimonios públicos de suelo. Actuaciones protegidas en materia de vivienda y suelo en Aragón. Planes de vivienda y rehabilitación. La vivienda de protección oficial. Marco legal y normativa de diseño y calidad. Régimen de descalificaciones y régimen sancionador."
+      ],
+      [
+        7,
+        "Valoraciones según la normativa urbanística y expropiatoria. Régimen de las valoraciones urbanísticas. Conceptos y criterios para la realización de las valoraciones. Valoración en situación de suelo rural. Valoración en situación de suelo urbanizado."
+      ],
+      [
+        8,
+        "Métodos de valoración según su finalidad. La valoración inmobiliaria. Valoración catastral y valor de referencia. Valoraciones a efectos tributarios. Valor del suelo. Valoración de construcciones, obras de infraestructura y servicios urbanísticos."
+      ],
+      [
+        9,
+        "Los Sistemas de Información Geográfica (SIG). Definición, componentes, organización, implementación y aplicaciones de un SIG. Las Infraestructuras de Datos Espaciales (IDE) e ICEAragon. Sistema de información urbanística de Aragón (SIUA). Cartografía catastral."
+      ],
+      [
+        10,
+        "El Código Técnico de la Edificación (CTE). Objeto, ámbito de aplicación, contenido del CTE. Documentos reconocidos y registro general del CTE. Condiciones y exigencias básicas que establece. Contenido del proyecto. Documentación del seguimiento de la obra."
+      ],
+      [
+        11,
+        "Demoliciones, trabajos previos y acondicionamiento del terreno. Excavaciones, vaciados, rellenos, gestión del agua, mejora del terreno y anclajes al terreno. Procesos y condiciones de ejecución según el CTE. Sistemas de apeos y apuntalamientos."
+      ],
+      [
+        12,
+        "Cimentaciones en los edificios. Estudios geotécnicos. Tipos de cimentaciones y descripción. Elementos de contención. Requisitos y condiciones constructivas según el CTE. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        13,
+        "Acciones en la edificación. Estructuras de hormigón en los edificios. Tipos y descripción. Requisitos y exigencias básicas según la normativa de aplicación. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        14,
+        "Estructuras de acero y estructuras mixtas en los edificios. Tipos y descripción. Requisitos y exigencias básicas según la normativa de aplicación. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        15,
+        "Estructuras de fábrica y estructuras de madera en los edificios. Tipos de muros y descripción. Sistemas estructurales de madera, uniones. Requisitos y exigencias básicas según el CTE. Criterios de diseño y condiciones de ejecución. Materiales empleados."
+      ],
+      [
+        16,
+        "Salubridad. Requisitos y exigencias básicas de higiene, salud y protección del medio ambiente en los edificios según el CTE. Protección frente a la humedad: muros, suelos, fachadas y cubiertas. Recogida y evacuación de residuos. Calidad del aire interior. Protección frente a la exposición al radón. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        17,
+        "Cubiertas en los edificios. Revestimientos y acabados de los edificios. Cerramientos y particiones. Pavimentos. Carpinterías, acristalamientos y elementos de seguridad y protección en los edificios. Tipos y descripción. Requisitos y exigencias básicas según el CTE. Condiciones que han de reunir los materiales y condiciones de ejecución."
+      ],
+      [
+        18,
+        "Confort térmico y ahorro de energía. Estrategias para la reducción de la demanda. Requisitos y exigencias básicas según el CTE. Condiciones de diseño y ejecución. Características exigibles a los productos y a los elementos constructivos. Contribución de las energías renovables en el proceso edificatorio."
+      ],
+      [
+        19,
+        "Eficiencia energética. Indicadores. La calificación de la eficiencia energética de los edificios. Certificación energética de edificios. Normativa de aplicación. Procedimientos para la certificación de edificios. Actuaciones y tramitación. El Registro de Certificación de Eficiencia Energética de Edificios en Aragón."
+      ],
+      [
+        20,
+        "Aislamiento vibroacústivo. Conceptos acústicos básicos. Sistemas de aislamiento y absorción. Protección frente al ruido. Requisitos y exigencias básicas según el CTE. Diseño y dimensionado, condiciones de ejecución. Características exigibles a los productos y a los elementos constructivos. Mapas de ruido."
+      ],
+      [
+        21,
+        "Seguridad en caso de incendio. Requisitos y exigencias básicas según el CTE. Resistencia al fuego de los elementos constructivos. Compartimentación, evacuación de ocupantes y señalización. Dotación de instalaciones de protección contra incendios. Intervención de los bomberos. Resistencia al fuego de la estructura. Condiciones de diseño y ejecución. Características exigibles a los productos y a los elementos constructivos."
+      ],
+      [
+        22,
+        "Instalaciones de saneamiento y fontanería en los edificios. Tipos y descripción. Redes de evacuación y subsistemas de ventilación. Redes de suministro de agua fría y agua caliente sanitaria. Elementos que componen las instalaciones. Requisitos y exigencias básicas según el CTE. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        23,
+        "Instalaciones eléctricas y de telecomunicaciones en los edificios. Tipos y descripción. Normativa de aplicación. Partes que componen las instalaciones. Criterios de diseño, requisitos y prescripciones técnicas que han cumplir. Condiciones de ejecución."
+      ],
+      [
+        24,
+        "Instalaciones de climatización y ventilación en los edificios. Instalaciones de gas en las viviendas. Normativa de aplicación. Confort térmico y calidad del aire interior. Tipos y descripción. Partes que componen las instalaciones. Requisitos, exigencias y prescripciones que han de cumplir. Condiciones de ejecución."
+      ],
+      [
+        25,
+        "Otras instalaciones en los edificios. Aparatos elevadores. Pararrayos. Instalaciones de protección contra incendios. Normativa de aplicación. Requisitos, exigencias y prescripciones que han de cumplir. Condiciones de ejecución."
+      ],
+      [
+        26,
+        "Rehabilitación, renovación y regeneración urbana. Obras en edificios existentes; análisis, investigaciones previas y trabajos preparatorios. Diagnosis y tratamientos. Contenido específico del proyecto de ejecución. El CTE y la intervención en edificios existentes. Rehabilitación energética de edificios existentes."
+      ],
+      [
+        27,
+        "El uso, conservación y mantenimiento de los edificios. Normativa reguladora. Documentación de la obra ejecutada: el libro del edificio y el libro del edificio existente. Instrucciones de uso, conservación y mantenimiento."
+      ],
+      [
+        28,
+        "Daños y defectos en los edificios. Lesiones, humedades, fisuras y grietas: tipos, características, causas, efectos, prevención y tratamiento. Patologías de la piedra, la madera, obras de fábrica y el hormigón: tipos, características, causas, efectos, prevención y tratamiento. Otros daños y defectos."
+      ],
+      [
+        29,
+        "El control de calidad en las obras de edificación. Normativa de aplicación. Plan de control de calidad. Registro y justificación documental de los controles realizados. Marcado CE, certificaciones de conformidad y otros distintivos de calidad. Las entidades y los laboratorios de control de calidad. El Registro de laboratorios de ensayos y de entidades de control de calidad de la edificación de Aragón."
+      ],
+      [
+        30,
+        "La seguridad y salud en las obras de construcción. Normativa de aplicación. Evaluación y prevención de riesgos. Principios de la acción preventiva. Obligaciones de los agentes intervinientes. El estudio y el estudio básico de seguridad y salud. El coordinador de seguridad y salud. El plan de seguridad y salud en el trabajo. El libro de incidencias. La subcontratación en el sector de la construcción."
+      ],
+      [
+        31,
+        "Accesibilidad universal. La accesibilidad en las infraestructuras, el urbanismo, la edificación y la comunicación. Normativa de regulación. Ámbito de aplicación y definiciones. Diseño y ejecución, medidas de fomento y financiación. Las intervenciones de mejora de la accesibilidad en edificios existentes, obligaciones de las comunidades en régimen de propiedad horizontal."
+      ],
+      [
+        32,
+        "Urbanización y reurbanización: viales, pavimentaciones, redes e instalaciones, jardinería, mobiliario urbano. Tipos y descripción. Prescripciones técnicas y normativa de aplicación. Criterios de diseño y condiciones de ejecución."
+      ],
+      [
+        33,
+        "Normas especiales sobre construcción de infraestructuras y equipamientos; centros sanitarios, asistenciales, docentes, administrativos y culturales. Normativa técnica de aplicación. Criterios de diseño y calidad. Equipamiento, dotaciones e instalaciones. Establecimientos de uso turístico, viviendas de uso turístico."
+      ],
+      [
+        34,
+        "Protección y prevención ambiental. Normativa de aplicación. Impacto medioambiental del proceso edificatorio. Evaluación ambiental estratégica. Evaluación de impacto ambiental. Autorización ambiental integrada. Actividades clasificadas."
+      ],
+      [
+        35,
+        "Gestión de residuos de construcción y demolición. Normativa de aplicación. Obligaciones de los agentes intervinientes en el proceso edificatorio. El estudio de gestión de residuos y el plan de gestión de residuos. Prevención de residuos en obra, reutilización, valorización, tratamiento y eliminación de residuos. Gestión de residuos con amianto."
+      ],
+      [
+        36,
+        "Sostenibilidad en el proceso edificatorio. Análisis del ciclo de vida de los edificios. Impacto climático en la construcción, en el uso y al final de su vida útil. La economía circular en el sector de la edificación."
+      ],
+      [
+        37,
+        "El Patrimonio histórico-artístico y cultural. Normas reguladoras de protección. Bienes que integran el patrimonio cultural aragonés; protección y conservación. Rehabilitación y restauración del patrimonio arquitectónico. Intervenciones en otros bienes inmuebles protegidos. Criterios de intervención en el patrimonio cultural."
+      ],
+      [
+        38,
+        "Norma Básica de Protección Civil. Marco legal y competencial del sistema de protección civil de Aragón. Planificación de protección civil de Aragón. Riesgos de protección civil de acuerdo a la Norma Básica de Protección Civil. Riesgos de protección civil de acuerdo al Plan Territorial de Protección Civil de Aragón."
+      ],
+      [
+        39,
+        "Planes territoriales de protección civil de acuerdo a la legislación autonómica y al plan territorial de protección civil de Aragón. Planes especiales de protección civil de acuerdo a la Norma Básica de Protección Civil y a la legislación autonómica. Planes de autoprotección: contenido, actividades afectadas, aprobación y registro."
+      ],
+      [
+        40,
+        "Ley de contratos del sector público. Delimitación de los tipos contractuales. Partes en el contrato. Solvencia y clasificación de las empresas. Presupuesto base de licitación, valor estimado y precio del contrato. Garantías exigibles."
+      ],
+      [
+        41,
+        "Ley de contratos del sector público. Expedientes de contratación. Expediente de contratación en contratos menores. Pliegos de cláusulas administrativas y de prescripciones técnicas. Procedimientos de adjudicación. Ejecución, modificación suspensión y extinción de los contratos. Cesión de los contratos y subcontratación."
+      ],
+      [
+        42,
+        "El contrato de obras en la Administración. Actuaciones preparatorias del contrato de obras. El proyecto de obras: contenido, supervisión y tramitación. Ejecución del contrato de obra. Comprobación del replanteo. Recepción y plazo de garantía, responsabilidad por vicios ocultos. Obligaciones del contratista durante el plazo de garantía."
+      ],
+      [
+        43,
+        "El abono de la obra de contratación pública. Certificaciones y abonos a cuenta. Mediciones y relaciones valoradas. Obras a tanto alzado y obras con precio cerrado. Revisión de precios en los contratos de obras: procedencia y límites. Procedimiento para la revisión de precios. Relación de materiales básicos y las fórmulas-tipo generales de revisión de precios de los contratos de obras."
+      ],
+      [
+        44,
+        "La modificación de los contratos de obras en la Administración. Modificaciones previstas y no previstas en los pliegos. Precio de las unidades de obra no previstas en el contrato. Variaciones en los plazos de ejecución por modificaciones del proyecto."
+      ],
+      [
+        45,
+        "Modelización informática de edificios y construcciones, metodología BIM; incorporación en la contratación pública. Conceptos generales. Cronología de implantación y evolución. Sistemas de apoyo para la organización y seguimiento de la obra; programas y aplicaciones de diseño asistido por ordenador, planificación de la obra, mediciones y presupuestos, bases de precios."
+      ]
+    ]
+  },
+  "Anexo_XXVII_Delineantes": {
+    "display_name": "Anexo XXVII Delineantes",
+    "comunes": [
+      [
+        1,
+        "La Constitución Española de 1978: estructura, contenido y principios que la informan. Los derechos fundamentales y sus garantías. La Corona. Las Cortes Generales. El Poder Judicial. El Tribunal Constitucional. El Defensor del Pueblo."
+      ],
+      [
+        2,
+        "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+      ],
+      [
+        3,
+        "El Estatuto de Autonomía de Aragón. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes de Aragón. El Justicia de Aragón."
+      ],
+      [
+        4,
+        "Los órganos de gobierno y administración de la Comunidad Autónoma de Aragón. El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. La estructura administrativa. El Sector Público de la Comunidad Autónoma de Aragón. La Administración consultiva: el Consejo de Estado y el Consejo Consultivo de Aragón."
+      ],
+      [
+        5,
+        "La prevención de riesgos laborales: derechos y obligaciones en materia de seguridad y salud en el trabajo."
+      ]
+    ],
+    "especificos": [
+      [
+        1,
+        "Croquización, acotación y rotulación técnica. Técnicas básicas de dibujo a mano alzada. Digitalización del croquis. Croquización digital. Representación de elementos constructivos. Normas y técnicas de acotación. Normas UNE, ISO y DIN. Simbología normalizada. Rotulación: normas generales y reglas en CAD y BIM."
+      ],
+      [
+        2,
+        "Escalas: conceptos, tipos, normativa y aplicación práctica en la representación técnica. Definición y finalidad de la escala. Escalas en trabajos CAD y GIS."
+      ],
+      [
+        3,
+        "Sistemas de representación. Concepto y clasificación. Sistema diédrico. Sistema axonométrico: perspectiva isométrica, dimétrica y trimétrica. Perspectivas: cónica, caballera y militar. Sistemas híbridos y digitales: combinación de vistas 2D/3D, uso de vistas explotadas en BIM y CAD."
+      ],
+      [
+        4,
+        "Secciones constructivas: representación, tipos y aplicación técnica. Normativa y criterios técnicos: UNE, ISO, CTE (Código Técnico de la Edificación) y PG-3 (Pliego de Prescripciones Técnicas Generales para Obras de Carreteras y Puentes). Escalas y presentación."
+      ],
+      [
+        5,
+        "Geometría aplicada. Sistemas de coordenadas, uso en dibujo técnico, entorno CAD y proyectos BIM. Transformación de coordenadas: traslación, rotación, simetría y escalado. Transformación entre sistemas de referencia, reproyección en entornos GIS. Elementos geográficos básicos: punto, recta y plano. Polígonos y poliedros. Superficies curvas."
+      ],
+      [
+        6,
+        "Trigonometría: conceptos fundamentales. Razones trigonométricas. Funciones trigonométricas en la circunferencia unitaria. Aplicación de la trigonometría en el uso de estaciones totales, nivelaciones, replanteos y modelado digital de terrenos. Uso de trigonometría en entornos digitales (CAD y GIS)."
+      ],
+      [
+        7,
+        "Planimetría: determinación de puntos o vértices, levantamiento planimétrico. Altimetría y taquimetría: métodos altimétricos. Itinerario altimétrico. Clases de nivelación. Libreta taquimétrica."
+      ],
+      [
+        8,
+        "Topografía: definición. Mapas, planos y cartas. Instrumentos topográficos. Teodolitos, niveles y estaciones totales. Replanteo topográfico. Operación de replanteo. Replanteo de una construcción. Uso del GPS y sistemas de posicionamiento. La Red de Geodésica Activa de Aragón (ARAGEA)."
+      ],
+      [
+        9,
+        "Curvas de nivel y perfiles topográficos: conceptos y representación gráfica. Representación altimétrica: determinación de cotas y curvas de nivel en planos topográficos. Cálculo de pendientes entre dos puntos. Unión de puntos con pendiente fijada. Trazado de una alineación con pendiente constante. Perfiles longitudinales y transversales. Mediciones y cubicaciones. Norma Cartográfica de Aragón."
+      ],
+      [
+        10,
+        "Sistemas de información geográfica (I): conceptos generales. Introducción y consulta de datos. Ficheros ráster y vectoriales. Bases de datos. Software SIG: gestión y edición de capas, manejo de tablas, carga de datos desde distintos formatos: SHP, GeoPackage, DXF, CSV, servicios WMS/WFS, simbología y representación cartográfica, etiquetado, relación y unión de tablas."
+      ],
+      [
+        11,
+        "Sistemas de información geográfica (II). Software SIG: herramientas vectoriales y ráster, análisis espacial. Georreferenciación. Sistemas de coordenadas. Proyecciones. Las geodatabases: consulta, organización y gestión de información geográfica. Composición de mapas, escala, leyendas, organización gráfica y salida a trazador. Creación de archivos GML."
+      ],
+      [
+        12,
+        "Generalidades sobre Cartografía catastral urbana. Sistemas de coordenadas: UTM, ETRS89, EPSG y su aplicación en proyectos públicos. Los Husos. Modelos de datos y metadatación. Cartografía digital y georreferenciación. Las Infraestructuras de Datos Espaciales (IDE) e ICEARAGON."
+      ],
+      [
+        13,
+        "Movimientos y obras de tierras. Excavaciones y acondicionamiento del terreno. Esponjamiento del terreno. Elementos de contención. Aplicación Código Técnico de Edificación (CTE) y Pliego de Prescripciones Técnicas Generales para Obras de Carreteras y Puentes (PG- 3)."
+      ],
+      [
+        14,
+        "Cimentaciones y estructuras: generalidades, elementos tipos y materiales. Representación gráfica. Muros de contención y de sótano. Tipología y representación gráfica. Dimensionamiento genérico aproximado. Aplicación CTE."
+      ],
+      [
+        15,
+        "Muros de cerramiento y soporte: generalidades, materiales, elementos, aparejos y separaciones interiores. Aplicación CTE."
+      ],
+      [
+        16,
+        "Reconocimiento del terreno y ensayos. Clasificación de suelos y materiales. Firmes y pavimentos. Aplicación PG-3."
+      ],
+      [
+        17,
+        "Obra civil y de edificación: los elementos de la obra, nociones generales. Plantas, alzados, secciones y detalles constructivos. Perspectivas y sombreado. Secciones fugadas. Materiales de construcción: propiedades, clasificación y aplicación. Sistemas de construcción. Aplicación CTE y PG-3."
+      ],
+      [
+        18,
+        "Cubiertas: generalidades, tipos de cubiertas, elementos constructivos y materiales. Diseño y representación gráfica. Aplicación CTE."
+      ],
+      [
+        19,
+        "Edificios públicos: accesibilidad, supresión de barreras arquitectónicas y sistemas de protección y seguridad. Clases de edificios públicos según su destino. Edificios docentes, administrativos y sanitarios. Representación gráfica. Aplicación CTE."
+      ],
+      [
+        20,
+        "Vías de comunicación: carreteras y autopistas. Clases de vías de comunicación. Carretera. Elementos para el estudio y trazado de una carretera. Clases de carreteras. Características geométricas de las carreteras. Autopista."
+      ],
+      [
+        21,
+        "Obras Hidráulicas. Fundamentos: tipología de infraestructuras, principios de hidrología, principios de hidráulica y normativa vigente. Materiales y construcción. Elaboración de planos técnicos. Aplicación de software técnico: CAD, Civil 3D, Revit, InfraWorks y SIG. Realización de mediciones. Manejo del programa Presto."
+      ],
+      [
+        22,
+        "Redes de infraestructuras urbanas: abastecimiento de agua, conducciones de gas, conducciones de electricidad, red de alcantarillado y alumbrado público. Generalidades, partes, funcionalidad, tipos, materiales y simbología."
+      ],
+      [
+        23,
+        "Instalaciones interiores en edificación: fontanería, saneamiento, gas, electricidad, ventilación, calefacción, telecomunicaciones, aire acondicionado y protección contra incendios. Generalidades, elementos principales, tipos, materiales y simbología. Aplicación CTE y normativas sectoriales."
+      ],
+      [
+        24,
+        "Carpintería: metálica, madera, aluminio y PVC. Clasificación en función de su funcionamiento. Simbología y detalles constructivos. Aplicación CTE."
+      ],
+      [
+        25,
+        "Ascensores y montacargas: necesidad de aparatos elevadores. Clases de aparatos elevadores. Recinto y características del mismo. Cuarto de máquinas. Simbología de los principales equipos de ascensores y elementos accesorios."
+      ],
+      [
+        26,
+        "Escalera. Tipos de escalera. Elementos principales. Cálculo de pendiente, huella y contrahuella. Compensación y representación gráfica. Aplicación CTE."
+      ],
+      [
+        27,
+        "Seguridad y Salud en obras de construcción. Estudio o Estudio Básico de Seguridad y Salud. Plan de Seguridad y Salud. Representación gráfica de las medidas preventivas en los planos del proyecto: zonas de riesgo, medios de protección colectiva, accesos seguros, ubicación de instalaciones provisionales, señalización de seguridad."
+      ],
+      [
+        28,
+        "Documentación Técnica y Gestión de Proyectos. Concepto de proyecto. Partes principales del proyecto. Pliego de condiciones. Mediciones y presupuesto. Planos necesarios para la elaboración de un proyecto. Gestión documental con herramientas digitales. Seguimiento y control de obra desde la administración: informes, actas y certificaciones."
+      ],
+      [
+        29,
+        "Diseño asistido por ordenador: programas y aplicaciones más extendidas. Automatización en CAD: uso de scripts, rutinas LISP, macros y personalización del entorno. Características fundamentales. Referencias internas, externas de ficheros raster y vectoriales. Creación y modificación de bloques. Programas AutoCAD y Revit: conceptos, funciones y aplicación práctica. Espacio de diseño, hojas, unidades de trabajo, plantillas y ficheros semilla."
+      ],
+      [
+        30,
+        "El trabajo colaborativo: BIM. Conceptos generales. Cronología de implantación y evolución. Dimensiones: del 3D al 7D. Niveles: LOD. Particularidades. Conectividad: modelado, mediciones y valoración. Software existente. Campos de aplicación."
+      ]
+    ]
+  },
+  "Anexo_XXVI_Ejecutivos de Informática": {
+    "display_name": "Anexo XXVI Ejecutivos de Informática",
+    "comunes": [
+      [
+        1,
+        "La Constitución Española de 1978: estructura, contenido y principios que la informan. Los derechos fundamentales y sus garantías. La Corona. Las Cortes Generales. El Poder Judicial. El Tribunal Constitucional. El Defensor del Pueblo."
+      ],
+      [
+        2,
+        "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+      ],
+      [
+        3,
+        "El Estatuto de Autonomía de Aragón. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes de Aragón. El Justicia de Aragón."
+      ],
+      [
+        4,
+        "Los órganos de gobierno y administración de la Comunidad Autónoma de Aragón. El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. La estructura administrativa. El Sector Público de la Comunidad Autónoma de Aragón. La Administración consultiva: el Consejo de Estado y el Consejo Consultivo de Aragón."
+      ],
+      [
+        5,
+        "La prevención de riesgos laborales: derechos y obligaciones en materia de seguridad y salud en el trabajo."
+      ]
+    ],
+    "especificos": [
+      [
+        1,
+        "La protección de datos personales. Régimen jurídico. El Reglamento (UE) 2016/679, de 27 de abril, relativo a la protección de las personas físicas en lo que respecta al tratamiento de datos personales y a la libre circulación de estos datos. Principios y derechos. Obligaciones. La Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales. El Delegado de Protección de Datos en las Administraciones Públicas. La Agencia de Protección de Datos: competencias y funciones."
+      ],
+      [
+        2,
+        "La sociedad de la información y sociedad del conocimiento. Comercio electrónico, medios y pasarelas de pago."
+      ],
+      [
+        3,
+        "Administración electrónica en España y en la Comunidad Autónoma de Aragón. La gestión electrónica de los procedimientos administrativos."
+      ],
+      [
+        4,
+        "Esquema Nacional de Seguridad, guías técnicas de seguridad (STIC). Esquena Nacional de Interoperabilidad, notas técnicas de interoperabilidad, instrumentos para la interoperabilidad."
+      ],
+      [
+        5,
+        "Identificación y firma electrónica. El cifrado, funciones hash, infraestructura de clave pública (PKI). Certificados locales y en la nube. Identidad digital. Normativa."
+      ],
+      [
+        6,
+        "Arquitectura y organización de computadores. Componentes internos, periféricos. Sistemas distribuidos y alta disponibilidad. Sistemas de almacenamiento."
+      ],
+      [
+        7,
+        "Sistemas operativos. Características y elementos constitutivos. Sistemas Windows. Sistemas Unix y Linux. Administración del sistema operativo."
+      ],
+      [
+        8,
+        "Computación en la nube: nube privada, pública e híbrida. Serverless computing. Virtualización de servidores y redes."
+      ],
+      [
+        9,
+        "Algoritmos y estructuras de datos. Tipos abstractos. Vectores y registros. Persistencia de datos. Organizaciones de ficheros. Formatos de información y ficheros."
+      ],
+      [
+        10,
+        "Diseño de bases de datos. Modelos conceptual, lógico y físico. Modelo Entidad-Relación. Modelo relacional. Normalización."
+      ],
+      [
+        11,
+        "Sistemas de gestión de bases de datos. Bases de datos relacionales, documentales, y orientadas a objetos. Características y componentes. Bases de datos NoSQL."
+      ],
+      [
+        12,
+        "Lenguajes de definición, manipulación y consulta de bases de datos. Estándar ANSI SQL. Procedimientos almacenados. Eventos y disparadores."
+      ],
+      [
+        13,
+        "Análisis y diseño estructurado. Flujo de datos, diccionario de datos, diagramas de estructura. Cohesión y acoplamiento."
+      ],
+      [
+        14,
+        "Análisis y diseño orientados a objetos. Elementos y componentes software: objetos, clases, herencia, polimorfismo, atributos, métodos, sobrecarga. Ventajas e inconvenientes. Patrones de diseño y lenguaje de modelado unificado (UML)."
+      ],
+      [
+        15,
+        "Lenguajes de programación. Representación de tipos de datos. Operadores. Instrucciones condicionales. Bucles y recursividad. Procedimientos, funciones y parámetros. Estructura de un programa."
+      ],
+      [
+        16,
+        "Arquitectura Java EE, componentes, persistencia y seguridad. Características, elementos y funciones. Servidores de aplicaciones y frameworks."
+      ],
+      [
+        17,
+        "Arquitectura de sistemas cliente/servidor y multicapa: componentes y operación. Arquitecturas de servicios web y protocolos asociados. Servicios SOAP y REST. Arquitecturas de microservicios."
+      ],
+      [
+        18,
+        "Aplicaciones web. Desarrollo en frontend y servidor, multiplataforma y multidispositivo. Navegadores y lenguajes de programación web: HTML, CSS, XML. Lenguajes de script. Frameworks de desarrollo frontend."
+      ],
+      [
+        19,
+        "Aplicaciones móviles. Tecnologías de programación móviles. PWA, aplicaciones nativas e híbridas."
+      ],
+      [
+        20,
+        "Accesibilidad, diseño universal y usabilidad. Acceso y usabilidad de las tecnologías. Design Thinking y el rediseño de servicios."
+      ],
+      [
+        21,
+        "Procesos de pruebas y garantía de calidad en el desarrollo de software. Niveles, técnicas y herramientas de pruebas de software. DevOps."
+      ],
+      [
+        22,
+        "Sistemas de información, ciclo de vida, elementos constitutivos. Ciclo de vida del software. Metodologías de desarrollo predictivas y ágiles. Metodologías Métrica y Scrum."
+      ],
+      [
+        23,
+        "Seguridad de los sistemas de información. Seguridad física. Seguridad lógica. Activos, debilidades, riesgos, amenazas y vulnerabilidades. Técnicas criptográficas y protocolos seguros."
+      ],
+      [
+        24,
+        "Medios de transmisión. Modos de comunicación. Equipos terminales y equipos de interconexión y conmutación. Redes de comunicaciones. Redes de conmutación y redes de difusión. Comunicaciones móviles e inalámbricas."
+      ],
+      [
+        25,
+        "Redes locales. Topología. Técnicas de transmisión. Métodos de acceso. Dispositivos de interconexión. Administración de redes locales."
+      ],
+      [
+        26,
+        "El modelo de referencia de interconexión de sistemas abiertos (OSI) de ISO. Familia de protocolos TCP/IP: aplicación, transporte, red, enlace."
+      ],
+      [
+        27,
+        "Internet: arquitectura de red. Origen, evolución y estado actual. Gobernanza. Sistemas Autónomos. Principales servicios."
+      ],
+      [
+        28,
+        "Seguridad y protección en redes de comunicaciones. Protocolos SSL y TLS. Seguridad perimetral. Acceso remoto seguro a redes. Redes privadas virtuales (VPN). Seguridad en el puesto del usuario. Autenticación multifactor."
+      ],
+      [
+        29,
+        "- Sistemas ERP (Enterprise Resource Planning) y CRM (Customer Relationship Management). Generación de informes."
+      ],
+      [
+        30,
+        "Ciencia de datos. Tecnologías de Business Intelligence. Data Warehouse. Data Mining. Data Lakes. Big Data. Machine Learning. Modelos LLM. Inteligencia Artificial."
+      ]
+    ]
+  },
+  "Anexo_XXXIV_Protección de Patrimonio": {
+    "display_name": "Anexo XXXIV Protección de Patrimonio",
+    "comunes": [],
+    "especificos": []
+  }
+}

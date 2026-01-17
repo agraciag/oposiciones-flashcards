@@ -1,0 +1,349 @@
+{
+  "anexo_v": {
+    "comunes": [
+      [
+        1,
+        "La Constitución Española de 1978: estructura y contenido. Valores superiores y principios inspiradores. El Estado Social y Democrático de Derecho. La Corona. Las Cortes Generales. El Poder Judicial. Derechos y libertades. Deberes de los ciudadanos. Principios rectores de la política social y económica. Garantías. Defensor del Pueblo."
+      ],
+      [
+        2,
+        "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+      ],
+      [
+        3,
+        "El Estatuto de Autonomía de Aragón: naturaleza y contenido. Competencias de la Comunidad Autónoma. La reforma del Estatuto. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes y el Justicia de Aragón."
+      ],
+      [
+        4,
+        "El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. Los órganos administrativos: su régimen y el ejercicio de las competencias."
+      ],
+      [
+        5,
+        "La Unión Europea. Antecedentes y evolución histórica. Las fuentes del Derecho de la Unión Europea. Las Instituciones de la Unión Europea. La participación de las Comunidades Autónomas en la aplicación del Derecho Comunitario."
+      ],
+      [
+        6,
+        "Ley del Procedimiento Administrativo Común de las Administraciones Públicas: ámbito de aplicación y principios informadores. Los interesados: capacidad y representación. Derechos de los ciudadanos en sus relaciones con las Administraciones Públicas, especial referencia a la administración electrónica. Sujetos obligados a relacionarse electrónicamente con la Administración. Identificación y firma de los interesados. Representación Procedimiento administrativo: las garantías en el desarrollo del procedimiento y las fases de iniciación, ordenación, instrucción y finalización. La transparencia de las Administraciones Públicas y acceso a la información pública."
+      ],
+      [
+        7,
+        "El acto administrativo: concepto, elementos y clases. Requisitos y eficacia de los actos administrativos. Nulidad y anulabilidad. La obligación de la Administración de resolver y notificar Silencio administrativo. Términos y plazos. Sistema de Interconexión de Registros. Notificación electrónica. Revisión de los actos administrativos."
+      ],
+      [
+        8,
+        "La responsabilidad patrimonial de la Administración Pública. Responsabilidad de las autoridades y personal a su servicio."
+      ],
+      [
+        9,
+        "El Estatuto Básico del Empleado Público. El personal funcionario de la Administración de la Comunidad Autónoma de Aragón: clases de empleados públicos, selección, provisión y carrera administrativa. Personal laboral. Integridad y Ética pública. Código de Conducta del personal empleado público. Régimen disciplinario y normativa penal relativa a la función pública."
+      ],
+      [
+        10,
+        "El presupuesto: sus principios. Estructura del presupuesto de la Comunidad Autónoma de Aragón. Los créditos y sus modificaciones. Ejecución del presupuesto. El control presupuestario."
+      ]
+    ],
+    "especificos": [
+      [
+        1,
+        "Ley de Ordenación de la Edificación. Objeto y ámbito de aplicación. Requisitos básicos de la edificación. Agentes que intervienen: concepto y obligaciones. Responsabilidades y garantías. Las atribuciones y competencias del arquitecto técnico."
+      ],
+      [
+        2,
+        "Legislación estatal en materia de régimen del suelo. Legislación urbanística en la Comunidad Autónoma de Aragón. Régimen urbanístico del suelo: situaciones, clases y categorías del suelo. Planeamiento urbanístico: instrumentos de planificación urbana. Política urbanística y de suelo. Directriz especial de urbanismo. Norma técnica de planeamiento (NOTEPA)."
+      ]
+    ]
+  },
+  "comparisons": [
+    {
+      "name": "Anexo_III_Técnicos de Informática",
+      "pct": 69.23076923076923,
+      "comunes": [],
+      "especificos": [
+        [
+          1,
+          "La Constitución Española de 1978: estructura y contenido. Valores superiores y principios inspiradores. El Estado Social y Democrático de Derecho. La Corona. Las Cortes Generales. El Poder Judicial. Derechos y libertades. Deberes de los ciudadanos. Principios rectores de la política social y económica. Garantías. Defensor del Pueblo."
+        ],
+        [
+          2,
+          "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+        ],
+        [
+          3,
+          "El Estatuto de Autonomía de Aragón: naturaleza y contenido. Competencias de la Comunidad Autónoma. La reforma del Estatuto. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes y el Justicia de Aragón."
+        ],
+        [
+          4,
+          "El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. Los órganos administrativos: su régimen y el ejercicio de las competencias."
+        ],
+        [
+          5,
+          "La Unión Europea. Antecedentes y evolución histórica. Las fuentes del Derecho de la Unión Europea. Las Instituciones de la Unión Europea. La participación de las Comunidades Autónomas en la aplicación del Derecho Comunitario."
+        ],
+        [
+          6,
+          "Ley del Procedimiento Administrativo Común de las Administraciones Públicas: ámbito de aplicación y principios informadores. Los interesados: capacidad y representación. Derechos de los ciudadanos en sus relaciones con las Administraciones Públicas, especial referencia a la administración electrónica. Sujetos obligados a relacionarse electrónicamente con la Administración. Identificación y firma de los interesados. Representación Procedimiento administrativo: las garantías en el desarrollo del procedimiento y las fases de iniciación, ordenación, instrucción y finalización. La transparencia de las Administraciones Públicas y acceso a la información pública."
+        ],
+        [
+          7,
+          "El acto administrativo: concepto, elementos y clases. Requisitos y eficacia de los actos administrativos. Nulidad y anulabilidad. La obligación de la Administración de resolver y notificar Silencio administrativo. Términos y plazos. Sistema de Interconexión de Registros. Notificación electrónica. Revisión de los actos administrativos."
+        ],
+        [
+          8,
+          "La responsabilidad patrimonial de la Administración Pública. Responsabilidad de las autoridades y personal a su servicio."
+        ],
+        [
+          9,
+          "El Estatuto Básico del Empleado Público. El personal funcionario de la Administración de la Comunidad Autónoma de Aragón: clases de empleados públicos, selección, provisión y carrera administrativa. Personal laboral. Integridad y Ética pública. Código de Conducta del personal empleado público. Régimen disciplinario y normativa penal relativa a la función pública."
+        ],
+        [
+          10,
+          "El presupuesto: sus principios. Estructura del presupuesto de la Comunidad Autónoma de Aragón. Los créditos y sus modificaciones. Ejecución del presupuesto. El control presupuestario."
+        ],
+        [
+          11,
+          "La protección de datos personales. Régimen jurídico. El Reglamento (UE) 2016/679, de 27 de abril, relativo a la protección de las personas físicas en lo que respecta al tratamiento de datos personales y a la libre circulación de estos datos. Principios y derechos. Obligaciones. El Delegado de Protección de Datos en las Administraciones Públicas. La Agencia Española de Protección de Datos. La Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales."
+        ],
+        [
+          12,
+          "Las Leyes del Procedimiento Administrativo Común de las Administraciones Públicas y de Régimen Jurídico del Sector Público, y su normativa de desarrollo. La gestión electrónica de los procedimientos administrativos. Esquema Nacional de Seguridad (ENS). Esquema Nacional de Interoperabilidad (ENI). Normas técnicas de interoperabilidad. Guías CCN-STIC serie"
+        ],
+        [
+          800,
+          "13. Instrumentos para el acceso electrónico a las Administraciones Públicas: sedes electrónicas, canales y punto de acceso, identificación y autenticación."
+        ]
+      ]
+    },
+    {
+      "name": "Anexo_XXVII_Delineantes",
+      "pct": 50.0,
+      "comunes": [
+        [
+          1,
+          "La Constitución Española de 1978: estructura, contenido y principios que la informan. Los derechos fundamentales y sus garantías. La Corona. Las Cortes Generales. El Poder Judicial. El Tribunal Constitucional. El Defensor del Pueblo."
+        ],
+        [
+          2,
+          "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+        ],
+        [
+          3,
+          "El Estatuto de Autonomía de Aragón. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes de Aragón. El Justicia de Aragón."
+        ],
+        [
+          4,
+          "Los órganos de gobierno y administración de la Comunidad Autónoma de Aragón. El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. La estructura administrativa. El Sector Público de la Comunidad Autónoma de Aragón. La Administración consultiva: el Consejo de Estado y el Consejo Consultivo de Aragón."
+        ],
+        [
+          5,
+          "La prevención de riesgos laborales: derechos y obligaciones en materia de seguridad y salud en el trabajo."
+        ]
+      ],
+      "especificos": [
+        [
+          1,
+          "Croquización, acotación y rotulación técnica. Técnicas básicas de dibujo a mano alzada. Digitalización del croquis. Croquización digital. Representación de elementos constructivos. Normas y técnicas de acotación. Normas UNE, ISO y DIN. Simbología normalizada. Rotulación: normas generales y reglas en CAD y BIM."
+        ],
+        [
+          2,
+          "Escalas: conceptos, tipos, normativa y aplicación práctica en la representación técnica. Definición y finalidad de la escala. Escalas en trabajos CAD y GIS."
+        ],
+        [
+          3,
+          "Sistemas de representación. Concepto y clasificación. Sistema diédrico. Sistema axonométrico: perspectiva isométrica, dimétrica y trimétrica. Perspectivas: cónica, caballera y militar. Sistemas híbridos y digitales: combinación de vistas 2D/3D, uso de vistas explotadas en BIM y CAD."
+        ],
+        [
+          4,
+          "Secciones constructivas: representación, tipos y aplicación técnica. Normativa y criterios técnicos: UNE, ISO, CTE (Código Técnico de la Edificación) y PG-3 (Pliego de Prescripciones Técnicas Generales para Obras de Carreteras y Puentes). Escalas y presentación."
+        ],
+        [
+          5,
+          "Geometría aplicada. Sistemas de coordenadas, uso en dibujo técnico, entorno CAD y proyectos BIM. Transformación de coordenadas: traslación, rotación, simetría y escalado. Transformación entre sistemas de referencia, reproyección en entornos GIS. Elementos geográficos básicos: punto, recta y plano. Polígonos y poliedros. Superficies curvas."
+        ],
+        [
+          6,
+          "Trigonometría: conceptos fundamentales. Razones trigonométricas. Funciones trigonométricas en la circunferencia unitaria. Aplicación de la trigonometría en el uso de estaciones totales, nivelaciones, replanteos y modelado digital de terrenos. Uso de trigonometría en entornos digitales (CAD y GIS)."
+        ],
+        [
+          7,
+          "Planimetría: determinación de puntos o vértices, levantamiento planimétrico. Altimetría y taquimetría: métodos altimétricos. Itinerario altimétrico. Clases de nivelación. Libreta taquimétrica."
+        ],
+        [
+          8,
+          "Topografía: definición. Mapas, planos y cartas. Instrumentos topográficos. Teodolitos, niveles y estaciones totales. Replanteo topográfico. Operación de replanteo. Replanteo de una construcción. Uso del GPS y sistemas de posicionamiento. La Red de Geodésica Activa de Aragón (ARAGEA)."
+        ],
+        [
+          9,
+          "Curvas de nivel y perfiles topográficos: conceptos y representación gráfica. Representación altimétrica: determinación de cotas y curvas de nivel en planos topográficos. Cálculo de pendientes entre dos puntos. Unión de puntos con pendiente fijada. Trazado de una alineación"
+        ]
+      ]
+    },
+    {
+      "name": "Anexo_XXXIV_Protección de Patrimonio",
+      "pct": 35.0,
+      "comunes": [
+        [
+          1,
+          "La Constitución Española de 1978: estructura y contenido. Derechos y deberes fundamentales."
+        ],
+        [
+          2,
+          "La organización territorial del Estado: las Comunidades Autónomas. La Administración Local."
+        ],
+        [
+          3,
+          "El Estatuto de Autonomía de Aragón. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes. El Justicia de Aragón."
+        ],
+        [
+          4,
+          "Los órganos de gobierno y administración de la Comunidad Autónoma de Aragón. El Gobierno de Aragón. La estructura administrativa."
+        ],
+        [
+          5,
+          "El personal de las Administraciones Públicas. Estructura y organización de la Función Pública de la Comunidad Autónoma de Aragón. Derechos y deberes de los funcionarios. Incompatibilidades. Régimen disciplinario."
+        ]
+      ],
+      "especificos": [
+        [
+          1,
+          "Distribución competencial en materia de Patrimonio Cultural entre el Estado, la Comunidad Autónoma y las Entidades Locales."
+        ],
+        [
+          2,
+          "La Ley 3/1999, de 10 de marzo, del Patrimonio Cultural Aragonés (I y II). Disposiciones Generales. Los bienes integrantes del Patrimonio Cultural Aragonés."
+        ],
+        [
+          3,
+          "La Ley 3/1999, de 10 de marzo, del Patrimonio Cultural Aragonés (III). Régimen de protección y conservación del Patrimonio Cultural Aragonés."
+        ],
+        [
+          4,
+          "La Ley 3/1999, de 10 de marzo, del Patrimonio Cultural Aragonés (IV). Patrimonio arqueológico y paleontológico. Principales yacimientos de Aragón."
+        ],
+        [
+          5,
+          "La Ley 3/1999, de 10 de marzo, del Patrimonio Cultural Aragonés (V). Patrimonio etnográfico, industrial e inmaterial. Principales bienes aragoneses."
+        ],
+        [
+          6,
+          "La Ley 3/1999, de 10 de marzo, del Patrimonio Cultural Aragonés (VI). Régimen sancionador. El papel del Agente de Protección del Patrimonio Cultural antes posibles infracciones."
+        ],
+        [
+          7,
+          "Principales culturas que han existido en Aragón. Conceptos básicos."
+        ],
+        [
+          8,
+          "Principales Bienes de Interés Cultural de Aragón. Tipos y categorías de bienes. Ejemplos representativos de ellos."
+        ],
+        [
+          9,
+          "Los bienes del Patrimonio Cultural de Aragón como recurso: principales tipologías expositivas. La función social del Patrimonio Cultural y el desarrollo territorial."
+        ],
+        [
+          10,
+          "Los Parques Culturales en Aragón. Singularidades de cada uno de ellos."
+        ],
+        [
+          11,
+          "Los bienes del Patrimonio Mundial en Aragón. Lista indicativa, lista de Patrimonio Mundial y lista representativa del Patrimonio Cultural Inmaterial de la Humanidad."
+        ],
+        [
+          12,
+          "Las Comisiones Provinciales del Patrimonio Cultural en Aragón. Competencias y funcionamiento."
+        ],
+        [
+          13,
+          "La incidencia y relación de la normativa de Prevención y Protección medio ambiental y la de Espacios Naturales Protegidos de Aragón en la protección del Patrimonio Cultural en Aragón."
+        ],
+        [
+          14,
+          "Los recursos cartográficos y geográficos en Aragón. Conceptos básicos geográficos. Utilización de estos recursos en la difusión y protección del Patrimonio Cultural en Aragón."
+        ],
+        [
+          15,
+          "Organización territorial de Aragón. Principales características geológicas, geográficas, culturales y naturales."
+        ]
+      ]
+    },
+    {
+      "name": "Anexo_XXVI_Ejecutivos de Informática",
+      "pct": 33.33333333333333,
+      "comunes": [
+        [
+          1,
+          "La Constitución Española de 1978: estructura, contenido y principios que la informan. Los derechos fundamentales y sus garantías. La Corona. Las Cortes Generales. El Poder Judicial. El Tribunal Constitucional. El Defensor del Pueblo."
+        ],
+        [
+          2,
+          "La organización territorial del Estado. Gobierno de la Nación y Administración General del Estado. Comunidades Autónomas. Administración Local. Las relaciones entre los entes territoriales. Especial referencia a la comarcalización de Aragón."
+        ],
+        [
+          3,
+          "El Estatuto de Autonomía de Aragón. La organización institucional de la Comunidad Autónoma de Aragón. Las Cortes de Aragón. El Justicia de Aragón."
+        ],
+        [
+          4,
+          "Los órganos de gobierno y administración de la Comunidad Autónoma de Aragón. El Presidente y el Gobierno de Aragón. Los Consejeros. La Administración Pública de la Comunidad Autónoma. La estructura administrativa. El Sector Público de la Comunidad Autónoma de Aragón. La Administración consultiva: el Consejo de Estado y el Consejo Consultivo de Aragón."
+        ],
+        [
+          5,
+          "La prevención de riesgos laborales: derechos y obligaciones en materia de seguridad y salud en el trabajo."
+        ]
+      ],
+      "especificos": [
+        [
+          1,
+          "La protección de datos personales. Régimen jurídico. El Reglamento (UE) 2016/679, de 27 de abril, relativo a la protección de las personas físicas en lo que respecta al tratamiento de datos personales y a la libre circulación de estos datos. Principios y derechos. Obligaciones. La Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales. El Delegado de Protección de Datos en las Administraciones Públicas. La Agencia de Protección de Datos: competencias y funciones."
+        ],
+        [
+          2,
+          "La sociedad de la información y sociedad del conocimiento. Comercio electrónico, medios y pasarelas de pago."
+        ],
+        [
+          3,
+          "Administración electrónica en España y en la Comunidad Autónoma de Aragón. La gestión electrónica de los procedimientos administrativos."
+        ],
+        [
+          4,
+          "Esquema Nacional de Seguridad, guías técnicas de seguridad (STIC). Esquena Nacional de Interoperabilidad, notas técnicas de interoperabilidad, instrumentos para la interoperabilidad."
+        ],
+        [
+          5,
+          "Identificación y firma electrónica. El cifrado, funciones hash, infraestructura de clave pública (PKI). Certificados locales y en la nube. Identidad digital. Normativa."
+        ],
+        [
+          6,
+          "Arquitectura y organización de computadores. Componentes internos, periféricos. Sistemas distribuidos y alta disponibilidad. Sistemas de almacenamiento."
+        ],
+        [
+          7,
+          "Sistemas operativos. Características y elementos constitutivos. Sistemas Windows. Sistemas Unix y Linux. Administración del sistema operativo."
+        ],
+        [
+          8,
+          "Computación en la nube: nube privada, pública e híbrida. Serverless computing. Virtualización de servidores y redes."
+        ],
+        [
+          9,
+          "Algoritmos y estructuras de datos. Tipos abstractos. Vectores y registros. Persistencia de datos. Organizaciones de ficheros. Formatos de información y ficheros."
+        ],
+        [
+          10,
+          "Diseño de bases de datos. Modelos conceptual, lógico y físico. Modelo Entidad-Relación. Modelo relacional. Normalización."
+        ],
+        [
+          11,
+          "Sistemas de gestión de bases de datos. Bases de datos relacionales, documentales, y orientadas a objetos. Características y componentes. Bases de datos NoSQL."
+        ],
+        [
+          12,
+          "Lenguajes de definición, manipulación y consulta de bases de datos. Estándar ANSI SQL. Procedimientos almacenados. Eventos y disparadores."
+        ],
+        [
+          13,
+          "Análisis y diseño estructurado. Flujo de datos, diccionario de datos, diagramas de estructura. Cohesión y acoplamiento."
+        ]
+      ]
+    }
+  ]
+}

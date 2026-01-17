@@ -44,8 +44,8 @@ def run_seed_with_auth(script_name, token):
     )
 
     modified_script = modified_script.replace(
-        'requests.post(f"{API_URL}/flashcards/", json=card)',
-        f'requests.post(f"{{API_URL}}/flashcards/", json=card, headers={{"Authorization": "Bearer {token}"}})'
+        'requests.post(f"{API_URL}/flashcards/", json=flashcard)',
+        f'requests.post(f"{{API_URL}}/flashcards/", json=flashcard, headers={{"Authorization": "Bearer {token}"}})'
     )
 
     # Ejecutar el script modificado

@@ -169,6 +169,24 @@ export default function Home() {
           >
             📄 Importar PDF
           </Link>
+          <Link
+            href="/notes"
+            className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors"
+          >
+            📝 Apuntes
+          </Link>
+          <Link
+            href="/study-docs"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors"
+          >
+            📖 Docs Interactivos
+          </Link>
+          <Link
+            href="/syllabi"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors"
+          >
+            📋 Temarios
+          </Link>
         </div>
 
         {/* Decks List */}

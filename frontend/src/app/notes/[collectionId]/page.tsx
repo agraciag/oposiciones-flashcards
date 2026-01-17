@@ -221,6 +221,47 @@ export default function CollectionPage() {
     }
   };
 
+  const handleDuplicateNote = async (noteId: number) => {
+    try {
+      // Duplicar la nota
+      const response = await fetch(
+        `http://localhost:7999/api/notes/notes/${noteId}/duplicate`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al duplicar nota');
+      const newNote = await response.json();
+
+      // Añadirla a la colección actual (crear jerarquía)
+      const hierarchyResponse = await fetch('http://localhost:7999/api/notes/hierarchies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          collection_id: parseInt(collectionId),
+          note_id: newNote.id,
+          parent_id: null,
+          order_index: tree.length,
+          is_featured: false,
+        }),
+      });
+
+      if (!hierarchyResponse.ok) throw new Error('Error al añadir nota duplicada a colección');
+
+      // Recargar árbol y seleccionar la nueva nota
+      await fetchTree();
+      setSelectedNoteId(newNote.id);
+      setViewMode('edit'); // Abrir en modo edición para que pueda modificarla
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al duplicar nota');
+    }
+  };
+
   const handleGenerateFlashcards = async (noteId: number) => {
     const deckId = prompt('Introduce el ID del mazo donde guardar las flashcards:');
     if (!deckId) return;
@@ -430,6 +471,7 @@ export default function CollectionPage() {
                     note={selectedNote}
                     onEdit={(note) => setViewMode('edit')}
                     onDelete={handleDeleteNote}
+                    onDuplicate={handleDuplicateNote}
                     onGenerateFlashcards={handleGenerateFlashcards}
                   />
                 </div>

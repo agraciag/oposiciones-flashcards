@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 export default function NewCollectionPage() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +14,22 @@ export default function NewCollectionPage() {
     collection_type: 'custom' as 'temario' | 'normativa' | 'custom',
     is_public: false,
   });
+
+  // Redirigir a login si no está autenticado
+  useEffect(() => {
+    if (!authLoading && !token) {
+      router.push('/login');
+    }
+  }, [authLoading, token, router]);
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (authLoading || !token) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

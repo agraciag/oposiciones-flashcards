@@ -248,6 +248,37 @@ def delete_note(
     return None
 
 
+@router.post("/notes/{note_id}/duplicate", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
+def duplicate_note(
+    note_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Duplicar una nota existente"""
+    # Obtener nota original
+    original_note = db.query(Note).filter(Note.id == note_id).first()
+    if not original_note:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    if original_note.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No tienes acceso a esta nota")
+
+    # Crear copia de la nota
+    new_note = Note(
+        user_id=current_user.id,
+        title=f"{original_note.title} (copia)",
+        content=original_note.content,
+        note_type=original_note.note_type,
+        tags=original_note.tags,
+        legal_reference=original_note.legal_reference,
+        article_number=original_note.article_number
+    )
+    db.add(new_note)
+    db.commit()
+    db.refresh(new_note)
+    return new_note
+
+
 # ============================================================================
 # ENDPOINTS - COLLECTIONS
 # ============================================================================

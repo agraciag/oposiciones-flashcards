@@ -50,6 +50,9 @@ class User(Base):
     study_sessions = relationship("StudySession", back_populates="user")
     notes = relationship("Note", back_populates="user", cascade="all, delete-orphan")
     note_collections = relationship("NoteCollection", back_populates="user", cascade="all, delete-orphan")
+    study_documents = relationship("StudyDocument", back_populates="user", cascade="all, delete-orphan")
+    syllabi = relationship("Syllabus", back_populates="user", cascade="all, delete-orphan")
+    structured_topics = relationship("StructuredTopic", back_populates="user", cascade="all, delete-orphan")
 
 
 class Deck(Base):
@@ -258,3 +261,215 @@ class NoteHierarchy(Base):
     # Self-referential relationship para árbol
     children = relationship("NoteHierarchy", back_populates="parent", remote_side=[id])
     parent = relationship("NoteHierarchy", back_populates="children", remote_side=[parent_id])
+
+
+class StudyDocument(Base):
+    """Documento de estudio interactivo (tipo Wikipedia)"""
+    __tablename__ = "study_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Contenido
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)  # El texto base (temario)
+    description = Column(Text, nullable=True)
+
+    # Sharing
+    is_public = Column(Boolean, default=False, index=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    user = relationship("User", back_populates="study_documents")
+    annotations = relationship("StudyAnnotation", back_populates="document", cascade="all, delete-orphan")
+
+
+class StudyAnnotation(Base):
+    """Anotación/enlace dentro de un documento de estudio"""
+    __tablename__ = "study_annotations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("study_documents.id"), nullable=False)
+
+    # Posición en el texto
+    start_pos = Column(Integer, nullable=False)  # Posición inicial del texto seleccionado
+    end_pos = Column(Integer, nullable=False)    # Posición final del texto seleccionado
+    selected_text = Column(String, nullable=False)  # El texto seleccionado (para verificación)
+
+    # Contenido vinculado
+    annotation_title = Column(String, nullable=True)  # Título opcional para TOC
+    linked_content = Column(Text, nullable=False)  # Contenido expandible (markdown)
+
+    # Metadatos opcionales
+    legal_reference = Column(String, nullable=True)
+    article_number = Column(String, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    document = relationship("StudyDocument", back_populates="annotations")
+
+
+# ============================================================================
+# NUEVOS MODELOS: Sistema de Temarios Estructurados
+# ============================================================================
+
+class SourceType(str, enum.Enum):
+    """Tipo de fuente de contenido"""
+    NORMATIVA = "normativa"      # Extraído de normativa local
+    MANUAL = "manual"            # Introducido manualmente por el usuario
+    AI_GENERATED = "ai_generated"  # Generado por IA (con fuente citada)
+    PENDING = "pending"          # Pendiente de contenido
+
+
+class ContentStatus(str, enum.Enum):
+    """Estado del contenido de un tema"""
+    EMPTY = "empty"          # Sin contenido
+    PARTIAL = "partial"      # Contenido parcial
+    COMPLETE = "complete"    # Contenido completo
+    VERIFIED = "verified"    # Verificado por el usuario
+
+
+class NormativeSourceType(str, enum.Enum):
+    """Tipo de fuente normativa"""
+    BOE = "boe"              # Boletín Oficial del Estado
+    BOA = "boa"              # Boletín Oficial de Aragón
+    CTE = "cte"              # Código Técnico de la Edificación
+    CUSTOM = "custom"        # Otro tipo de normativa
+
+
+class Syllabus(Base):
+    """Temario oficial (ej: Anexo V Arquitectos Técnicos)"""
+    __tablename__ = "syllabi"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Información básica
+    name = Column(String, nullable=False)  # "Arquitectos Técnicos - Anexo V"
+    description = Column(Text, nullable=True)
+    source_file = Column(String, nullable=True)  # Ruta al PDF original
+
+    # Metadatos de progreso
+    total_topics = Column(Integer, default=0)
+    processed_topics = Column(Integer, default=0)
+
+    # Sharing
+    is_public = Column(Boolean, default=False, index=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    user = relationship("User", back_populates="syllabi")
+    topics = relationship("StructuredTopic", back_populates="syllabus", cascade="all, delete-orphan")
+
+
+class StructuredTopic(Base):
+    """Tema/subtema estructurado del temario"""
+    __tablename__ = "structured_topics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    syllabus_id = Column(Integer, ForeignKey("syllabi.id"), nullable=False)
+
+    # Jerarquía
+    parent_id = Column(Integer, ForeignKey("structured_topics.id"), nullable=True)
+    order_index = Column(Integer, default=0, nullable=False)  # Orden entre hermanos
+    level = Column(Integer, default=0, nullable=False)  # 0=raíz, 1=parte, 2=tema, 3=subtema...
+
+    # Contenido
+    title = Column(String, nullable=False)
+    code = Column(String, nullable=True)  # "1.2.3" o "Tema 1"
+    content = Column(Text, nullable=True)  # Contenido procesado (markdown)
+
+    # Fuente y trazabilidad
+    source_type = Column(Enum(SourceType), default=SourceType.PENDING, nullable=False)
+    source_reference = Column(String, nullable=True)  # Ruta al archivo o URL
+    source_excerpt = Column(Text, nullable=True)  # Texto original extraído
+
+    # Estado
+    content_status = Column(Enum(ContentStatus), default=ContentStatus.EMPTY, nullable=False)
+    last_processed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # UI state (persistido por usuario)
+    is_expanded = Column(Boolean, default=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relaciones
+    user = relationship("User", back_populates="structured_topics")
+    syllabus = relationship("Syllabus", back_populates="topics")
+
+    # Self-referential relationship para árbol
+    children = relationship(
+        "StructuredTopic",
+        back_populates="parent",
+        foreign_keys=[parent_id],
+        cascade="all, delete-orphan"
+    )
+    parent = relationship(
+        "StructuredTopic",
+        back_populates="children",
+        foreign_keys=[parent_id],
+        remote_side=[id]
+    )
+
+
+class NormativeSource(Base):
+    """Fuente normativa indexada para búsquedas"""
+    __tablename__ = "normative_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Identificación
+    name = Column(String, nullable=False)  # "Constitución Española"
+    code = Column(String, nullable=True, index=True)  # "BOE-A-1978-31229"
+    source_type = Column(Enum(NormativeSourceType), default=NormativeSourceType.CUSTOM, nullable=False)
+
+    # Ubicación
+    file_path = Column(String, nullable=True)  # Ruta local al archivo
+    url = Column(String, nullable=True)  # URL oficial
+
+    # Contenido indexado
+    full_text = Column(Text, nullable=True)  # Texto extraído del PDF
+    is_indexed = Column(Boolean, default=False, index=True)
+    indexed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Metadatos
+    file_size = Column(Integer, nullable=True)  # Tamaño en bytes
+    page_count = Column(Integer, nullable=True)  # Número de páginas
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ProcessingLog(Base):
+    """Log de procesamiento de contenido (trazabilidad)"""
+    __tablename__ = "processing_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topic_id = Column(Integer, ForeignKey("structured_topics.id"), nullable=False)
+
+    # Información del procesamiento
+    action = Column(String, nullable=False)  # "search", "extract", "synthesize"
+    agent_name = Column(String, nullable=True)  # "searcher", "synthesizer"
+    status = Column(String, nullable=False)  # "started", "completed", "failed"
+
+    # Detalles
+    input_data = Column(Text, nullable=True)  # JSON con datos de entrada
+    output_data = Column(Text, nullable=True)  # JSON con datos de salida
+    error_message = Column(Text, nullable=True)
+
+    # Fuentes consultadas
+    sources_checked = Column(Text, nullable=True)  # JSON lista de fuentes consultadas
+    source_found = Column(String, nullable=True)  # Fuente donde se encontró contenido
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relaciones
+    topic = relationship("StructuredTopic")
