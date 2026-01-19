@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     # Claude API
     ANTHROPIC_API_KEY: str = ""
 
+    # Ollama (Local LLM)
+    OLLAMA_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "qwen3:30b"
+    OLLAMA_TIMEOUT: int = 300  # 5 minutos max por request
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+
     # App
     DEBUG: bool = True
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"

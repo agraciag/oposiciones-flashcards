@@ -10,7 +10,7 @@ import uvicorn
 
 from config import settings
 from database import engine, Base
-from routers import flashcards, decks, study, auth, legislation, profile, notes, study_docs, syllabi
+from routers import flashcards, decks, study, auth, legislation, profile, notes, study_docs, syllabi, processing
 
 
 @asynccontextmanager
@@ -22,9 +22,17 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     print("✅ Base de datos lista")
 
+    # Iniciar worker de procesamiento con Ollama
+    from services.job_queue import start_worker
+    from database import SessionLocal
+    await start_worker(SessionLocal)
+    print("🤖 Worker de procesamiento Ollama iniciado")
+
     yield
 
     # Shutdown
+    from services.job_queue import stop_worker
+    await stop_worker()
     print("👋 Cerrando OpositApp Backend...")
 
 
@@ -54,6 +62,7 @@ app.include_router(legislation.router, prefix="/api/legislation", tags=["legisla
 app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
 app.include_router(study_docs.router, prefix="/api/study-docs", tags=["study-docs"])
 app.include_router(syllabi.router, prefix="/api/syllabi", tags=["syllabi"])
+app.include_router(processing.router, prefix="/api/processing", tags=["processing"])
 
 
 @app.get("/")

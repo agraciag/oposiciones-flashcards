@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ReactMarkdown from 'react-markdown';
@@ -40,6 +40,48 @@ interface Stats {
   by_source: Record<string, number>;
 }
 
+interface JobStatus {
+  topic_id: number;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_started';
+  has_content?: boolean;
+  error?: string;
+  result?: {
+    success: boolean;
+    content?: string;
+    error?: string;
+  };
+}
+
+interface TopicSources {
+  topic_id: number;
+  topic_title: string;
+  source_type: string | null;
+  source_reference: string | null;
+  source_excerpt: string | null;
+  last_processed_at: string | null;
+  processing_logs?: Array<{
+    action: string;
+    status: string;
+    created_at: string;
+  }>;
+}
+
+interface QueueStatus {
+  pending_jobs: number;
+  processing_jobs: number;
+  processing_topic_ids: string[];
+  status: string;
+}
+
+interface OllamaStatus {
+  available: boolean;
+  url: string;
+  model: string;
+  model_available: boolean;
+  models: string[];
+  error: string | null;
+}
+
 export default function SyllabusDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -59,6 +101,18 @@ export default function SyllabusDetailPage() {
   const [newTopic, setNewTopic] = useState({ title: '', code: '', content: '' });
   const [editingTopic, setEditingTopic] = useState(false);
 
+  // AI Processing State
+  const [processingTopics, setProcessingTopics] = useState<Set<number>>(new Set());
+  const [showReprocessModal, setShowReprocessModal] = useState(false);
+  const [reprocessExtraContext, setReprocessExtraContext] = useState('');
+  const [useEmbeddings, setUseEmbeddings] = useState(false);
+  const [showSourcesPanel, setShowSourcesPanel] = useState(false);
+  const [topicSources, setTopicSources] = useState<TopicSources | null>(null);
+  const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
+  const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
+  const [isProcessingAll, setIsProcessingAll] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (!authLoading && !token) {
       router.push('/login');
@@ -69,8 +123,24 @@ export default function SyllabusDetailPage() {
     if (token && syllabusId) {
       fetchSyllabus();
       fetchStats();
+      checkOllamaStatus();
     }
   }, [token, syllabusId]);
+
+  // Polling for processing status
+  useEffect(() => {
+    if (processingTopics.size > 0 || isProcessingAll) {
+      pollingRef.current = setInterval(() => {
+        checkProcessingStatus();
+      }, 2000);
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [processingTopics, isProcessingAll]);
 
   const fetchSyllabus = async () => {
     try {
@@ -112,6 +182,214 @@ export default function SyllabusDetailPage() {
       }
     } catch {
       // Stats are optional
+    }
+  };
+
+  const checkOllamaStatus = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:7999/api/processing/ollama/status',
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setOllamaStatus(data);
+      }
+    } catch {
+      setOllamaStatus({ available: false, url: '', model: '', model_available: false, models: [], error: 'No se pudo conectar' });
+    }
+  };
+
+  const checkProcessingStatus = async () => {
+    // Check individual topics
+    const topicsToCheck = Array.from(processingTopics);
+    for (const topicId of topicsToCheck) {
+      try {
+        const response = await fetch(
+          `http://localhost:7999/api/processing/topics/${topicId}/job-status`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.ok) {
+          const data: JobStatus = await response.json();
+          if (data.status === 'completed' || data.status === 'failed') {
+            setProcessingTopics(prev => {
+              const next = new Set(prev);
+              next.delete(topicId);
+              return next;
+            });
+            // Refresh data
+            await fetchSyllabus();
+            await fetchStats();
+          }
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    // Check queue status
+    try {
+      const response = await fetch(
+        'http://localhost:7999/api/processing/queue/status',
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        const data: QueueStatus = await response.json();
+        setQueueStatus(data);
+        if (data.status === 'idle' && isProcessingAll) {
+          setIsProcessingAll(false);
+          await fetchSyllabus();
+          await fetchStats();
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+  };
+
+  const processTopic = async (topicId: number, sync: boolean = false) => {
+    if (!ollamaStatus?.available) {
+      alert('Ollama no está disponible. Asegúrate de que está corriendo.');
+      return;
+    }
+
+    setProcessingTopics(prev => new Set(prev).add(topicId));
+
+    try {
+      const endpoint = sync
+        ? `http://localhost:7999/api/processing/topics/${topicId}/process-sync`
+        : `http://localhost:7999/api/processing/topics/${topicId}/process`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al procesar');
+      }
+
+      if (sync) {
+        // For sync processing, refresh immediately
+        await fetchSyllabus();
+        await fetchStats();
+        setProcessingTopics(prev => {
+          const next = new Set(prev);
+          next.delete(topicId);
+          return next;
+        });
+      }
+    } catch (err) {
+      setProcessingTopics(prev => {
+        const next = new Set(prev);
+        next.delete(topicId);
+        return next;
+      });
+      alert(err instanceof Error ? err.message : 'Error al procesar');
+    }
+  };
+
+  const reprocessTopic = async (topicId: number) => {
+    if (!ollamaStatus?.available) {
+      alert('Ollama no está disponible. Asegúrate de que está corriendo.');
+      return;
+    }
+
+    setProcessingTopics(prev => new Set(prev).add(topicId));
+    setShowReprocessModal(false);
+
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/processing/topics/${topicId}/reprocess`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            extra_context: reprocessExtraContext || null,
+            use_embeddings: useEmbeddings,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al re-procesar');
+      }
+
+      setReprocessExtraContext('');
+      setUseEmbeddings(false);
+    } catch (err) {
+      setProcessingTopics(prev => {
+        const next = new Set(prev);
+        next.delete(topicId);
+        return next;
+      });
+      alert(err instanceof Error ? err.message : 'Error al re-procesar');
+    }
+  };
+
+  const processAllTopics = async () => {
+    if (!ollamaStatus?.available) {
+      alert('Ollama no está disponible. Asegúrate de que está corriendo.');
+      return;
+    }
+
+    if (!confirm('¿Procesar todos los temas pendientes? Esto puede tardar un tiempo.')) {
+      return;
+    }
+
+    setIsProcessingAll(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/processing/syllabi/${syllabusId}/process-all`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ only_empty: true }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al procesar todos');
+      }
+
+      const data = await response.json();
+      // Add all queued topics to processing set
+      data.topic_ids?.forEach((id: number) => {
+        setProcessingTopics(prev => new Set(prev).add(id));
+      });
+    } catch (err) {
+      setIsProcessingAll(false);
+      alert(err instanceof Error ? err.message : 'Error al procesar todos');
+    }
+  };
+
+  const fetchTopicSources = async (topicId: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/processing/topics/${topicId}/sources`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setTopicSources(data);
+        setShowSourcesPanel(true);
+      }
+    } catch {
+      alert('Error al cargar fuentes');
     }
   };
 
@@ -266,6 +544,7 @@ export default function SyllabusDetailPage() {
       const isExpanded = expandedTopics.has(topic.id);
       const hasChildren = topic.children && topic.children.length > 0;
       const isSelected = selectedTopic?.id === topic.id;
+      const isProcessing = processingTopics.has(topic.id);
 
       return (
         <div key={topic.id} className="select-none">
@@ -273,6 +552,7 @@ export default function SyllabusDetailPage() {
             className={`
               flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer transition-colors
               ${isSelected ? 'bg-blue-100 dark:bg-blue-900/40' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}
+              ${isProcessing ? 'animate-pulse bg-orange-50 dark:bg-orange-900/20' : ''}
             `}
             style={{ paddingLeft: `${depth * 20 + 12}px` }}
             onClick={() => setSelectedTopic(topic)}
@@ -299,8 +579,12 @@ export default function SyllabusDetailPage() {
               <div className="w-6" />
             )}
 
-            {/* Status Icon */}
-            {getStatusIcon(topic.content_status)}
+            {/* Status Icon / Processing Spinner */}
+            {isProcessing ? (
+              <div className="animate-spin h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full" />
+            ) : (
+              getStatusIcon(topic.content_status)
+            )}
 
             {/* Code */}
             {topic.code && (
@@ -316,6 +600,22 @@ export default function SyllabusDetailPage() {
 
             {/* Source Badge */}
             {topic.source_type !== 'pending' && getSourceBadge(topic.source_type)}
+
+            {/* AI Process Button (visible on hover) */}
+            {!isProcessing && topic.content_status === 'empty' && ollamaStatus?.available && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  processTopic(topic.id);
+                }}
+                className="p-1 opacity-0 group-hover:opacity-100 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded text-orange-600"
+                title="Procesar con IA"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </button>
+            )}
 
             {/* Add Child Button */}
             <button
@@ -404,6 +704,49 @@ export default function SyllabusDetailPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Ollama Status Indicator */}
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+              ollamaStatus?.available
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${ollamaStatus?.available ? 'bg-green-500' : 'bg-red-500'}`} />
+              {ollamaStatus?.available ? 'Ollama OK' : 'Ollama Offline'}
+            </div>
+
+            {/* Queue Status */}
+            {queueStatus && (queueStatus.pending_jobs > 0 || queueStatus.processing_jobs > 0) && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                <div className="animate-spin h-3 w-3 border-2 border-orange-500 border-t-transparent rounded-full" />
+                {queueStatus.pending_jobs + queueStatus.processing_jobs} en cola
+              </div>
+            )}
+
+            {/* Process All Button */}
+            <button
+              onClick={processAllTopics}
+              disabled={!ollamaStatus?.available || isProcessingAll}
+              className={`px-3 py-2 rounded-lg transition-colors text-sm flex items-center gap-2 ${
+                ollamaStatus?.available && !isProcessingAll
+                  ? 'bg-orange-600 text-white hover:bg-orange-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isProcessingAll ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Procesar Todos
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => {
                 setParentForNewTopic(null);
@@ -517,14 +860,62 @@ export default function SyllabusDetailPage() {
                           {selectedTopic.title}
                         </h2>
                         <div className="flex items-center gap-2 mt-2">
-                          {getStatusIcon(selectedTopic.content_status)}
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {selectedTopic.content_status}
-                          </span>
+                          {processingTopics.has(selectedTopic.id) ? (
+                            <div className="flex items-center gap-2 text-orange-600">
+                              <div className="animate-spin h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full" />
+                              <span className="text-sm">Procesando...</span>
+                            </div>
+                          ) : (
+                            <>
+                              {getStatusIcon(selectedTopic.content_status)}
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {selectedTopic.content_status}
+                              </span>
+                            </>
+                          )}
                           {getSourceBadge(selectedTopic.source_type)}
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        {/* AI Process Button */}
+                        {ollamaStatus?.available && !processingTopics.has(selectedTopic.id) && (
+                          <button
+                            onClick={() => processTopic(selectedTopic.id, true)}
+                            className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg"
+                            title="Procesar con IA"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        )}
+
+                        {/* Re-process Button (only if has AI content) */}
+                        {selectedTopic.source_type === 'ai_generated' && ollamaStatus?.available && !processingTopics.has(selectedTopic.id) && (
+                          <button
+                            onClick={() => setShowReprocessModal(true)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg"
+                            title="Re-procesar con contexto"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                        )}
+
+                        {/* View Sources Button */}
+                        {selectedTopic.source_type === 'ai_generated' && (
+                          <button
+                            onClick={() => fetchTopicSources(selectedTopic.id)}
+                            className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg"
+                            title="Ver fuentes"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => setEditingTopic(true)}
                           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
@@ -561,12 +952,35 @@ export default function SyllabusDetailPage() {
                     ) : (
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                         <p className="mb-4">Este tema no tiene contenido.</p>
-                        <button
-                          onClick={() => setEditingTopic(true)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                        >
-                          Añadir Contenido
-                        </button>
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => setEditingTopic(true)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                          >
+                            Añadir Manualmente
+                          </button>
+                          {ollamaStatus?.available && (
+                            <button
+                              onClick={() => processTopic(selectedTopic.id, true)}
+                              disabled={processingTopics.has(selectedTopic.id)}
+                              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm flex items-center gap-2"
+                            >
+                              {processingTopics.has(selectedTopic.id) ? (
+                                <>
+                                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                  Procesando...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                  </svg>
+                                  Generar con IA
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </>
@@ -648,6 +1062,127 @@ export default function SyllabusDetailPage() {
                   Crear
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Re-process Modal */}
+      {showReprocessModal && selectedTopic && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Re-procesar tema
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                {selectedTopic.title}
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Contexto adicional o instrucciones
+                  </label>
+                  <textarea
+                    value={reprocessExtraContext}
+                    onChange={(e) => setReprocessExtraContext(e.target.value)}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                    placeholder="Ej: Centra el tema en el artículo 14 de la LOE, incluye más ejemplos prácticos..."
+                  />
+                </div>
+
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={useEmbeddings}
+                    onChange={(e) => setUseEmbeddings(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Usar búsqueda semántica (más lento pero más preciso)
+                  </span>
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
+                  Útil si la búsqueda por palabras clave no encontró contenido relevante
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowReprocessModal(false);
+                    setReprocessExtraContext('');
+                    setUseEmbeddings(false);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => reprocessTopic(selectedTopic.id)}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Re-procesar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sources Panel */}
+      {showSourcesPanel && topicSources && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Fuentes utilizadas
+                </h2>
+                <button
+                  onClick={() => setShowSourcesPanel(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {topicSources.topic_title}
+              </p>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {topicSources.source_reference && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Referencias
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {topicSources.source_reference}
+                  </p>
+                </div>
+              )}
+
+              {topicSources.source_excerpt && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Extracto original utilizado
+                  </h3>
+                  <pre className="text-xs bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">
+                    {topicSources.source_excerpt}
+                  </pre>
+                </div>
+              )}
+
+              {topicSources.last_processed_at && (
+                <p className="text-xs text-gray-400 mt-4">
+                  Último procesamiento: {new Date(topicSources.last_processed_at).toLocaleString('es-ES')}
+                </p>
+              )}
             </div>
           </div>
         </div>
