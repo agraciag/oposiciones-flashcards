@@ -113,6 +113,17 @@ export default function SyllabusDetailPage() {
   const [isProcessingAll, setIsProcessingAll] = useState(false);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Missing sources suggestion state
+  const [showMissingSourcesModal, setShowMissingSourcesModal] = useState(false);
+  const [missingSources, setMissingSources] = useState<Array<{nombre: string; tipo: string; descripcion: string}>>([]);
+  const [missingSourcesTopic, setMissingSourcesTopic] = useState<string>('');
+
+  // Source selection state
+  const [showProcessWithSourcesModal, setShowProcessWithSourcesModal] = useState(false);
+  const [availableSources, setAvailableSources] = useState<Array<{id: number; name: string; code: string | null; source_type: string | null; has_text: boolean}>>([]);
+  const [selectedSourceIds, setSelectedSourceIds] = useState<Set<number>>(new Set());
+  const [processExtraContext, setProcessExtraContext] = useState('');
+
   useEffect(() => {
     if (!authLoading && !token) {
       router.push('/login');
@@ -247,6 +258,78 @@ export default function SyllabusDetailPage() {
     }
   };
 
+  const fetchAvailableSources = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:7999/api/processing/sources',
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableSources(data);
+      }
+    } catch {
+      console.error('Error fetching sources');
+    }
+  };
+
+  const openProcessWithSourcesModal = async (topic: Topic) => {
+    setSelectedTopic(topic);
+    await fetchAvailableSources();
+    setSelectedSourceIds(new Set());
+    setProcessExtraContext('');
+    setShowProcessWithSourcesModal(true);
+  };
+
+  const processTopicWithSources = async () => {
+    if (!selectedTopic || !ollamaStatus?.available) {
+      alert('Ollama no está disponible.');
+      return;
+    }
+
+    const topicId = selectedTopic.id;
+    setShowProcessWithSourcesModal(false);
+    setProcessingTopics(prev => new Set(prev).add(topicId));
+
+    try {
+      const response = await fetch(
+        `http://localhost:7999/api/processing/topics/${topicId}/process-sync`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            extra_context: processExtraContext || null,
+            source_ids: selectedSourceIds.size > 0 ? Array.from(selectedSourceIds) : null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.needs_sources && data.suggested_sources) {
+        setMissingSources(data.suggested_sources);
+        setMissingSourcesTopic(selectedTopic.title);
+        setShowMissingSourcesModal(true);
+      } else if (data.success) {
+        await fetchSyllabus();
+        await fetchStats();
+      } else {
+        alert(data.error || 'Error al procesar');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al procesar');
+    } finally {
+      setProcessingTopics(prev => {
+        const next = new Set(prev);
+        next.delete(topicId);
+        return next;
+      });
+    }
+  };
+
   const processTopic = async (topicId: number, sync: boolean = false) => {
     if (!ollamaStatus?.available) {
       alert('Ollama no está disponible. Asegúrate de que está corriendo.');
@@ -269,9 +352,23 @@ export default function SyllabusDetailPage() {
         body: JSON.stringify({}),
       });
 
+      const data = await response.json();
+
+      // Check if sources are needed
+      if (data.needs_sources && data.suggested_sources) {
+        setMissingSources(data.suggested_sources);
+        setMissingSourcesTopic(selectedTopic?.title || `Tema #${topicId}`);
+        setShowMissingSourcesModal(true);
+        setProcessingTopics(prev => {
+          const next = new Set(prev);
+          next.delete(topicId);
+          return next;
+        });
+        return;
+      }
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al procesar');
+        throw new Error(data.detail || 'Error al procesar');
       }
 
       if (sync) {
@@ -877,12 +974,12 @@ export default function SyllabusDetailPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {/* AI Process Button */}
+                        {/* AI Process Button - Opens source selection modal */}
                         {ollamaStatus?.available && !processingTopics.has(selectedTopic.id) && (
                           <button
-                            onClick={() => processTopic(selectedTopic.id, true)}
+                            onClick={() => openProcessWithSourcesModal(selectedTopic)}
                             className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg"
-                            title="Procesar con IA"
+                            title="Procesar con IA (seleccionar fuentes)"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -961,7 +1058,7 @@ export default function SyllabusDetailPage() {
                           </button>
                           {ollamaStatus?.available && (
                             <button
-                              onClick={() => processTopic(selectedTopic.id, true)}
+                              onClick={() => openProcessWithSourcesModal(selectedTopic)}
                               disabled={processingTopics.has(selectedTopic.id)}
                               className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm flex items-center gap-2"
                             >
@@ -1125,6 +1222,194 @@ export default function SyllabusDetailPage() {
                   className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
                   Re-procesar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Process with Sources Modal */}
+      {showProcessWithSourcesModal && selectedTopic && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                Procesar con fuentes específicas
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {selectedTopic.title}
+              </p>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[50vh]">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Selecciona las fuentes normativas a utilizar:
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Si no seleccionas ninguna, el sistema buscará automáticamente.
+                </p>
+
+                <div className="space-y-2 max-h-[30vh] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2">
+                  {availableSources.length === 0 ? (
+                    <p className="text-sm text-gray-500 p-2">Cargando fuentes...</p>
+                  ) : (
+                    availableSources.map((source) => (
+                      <label
+                        key={source.id}
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedSourceIds.has(source.id)
+                            ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700'
+                            : 'bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border border-transparent'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSourceIds.has(source.id)}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedSourceIds);
+                            if (e.target.checked) {
+                              newSet.add(source.id);
+                            } else {
+                              newSet.delete(source.id);
+                            }
+                            setSelectedSourceIds(newSet);
+                          }}
+                          className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">
+                            {source.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {source.source_type && (
+                              <span className="px-2 py-0.5 text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
+                                {source.source_type}
+                              </span>
+                            )}
+                            {source.code && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {source.code}
+                              </span>
+                            )}
+                            {!source.has_text && (
+                              <span className="text-xs text-red-500">Sin texto indexado</span>
+                            )}
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Contexto adicional (opcional)
+                </label>
+                <textarea
+                  value={processExtraContext}
+                  onChange={(e) => setProcessExtraContext(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                  placeholder="Ej: Enfócate en los artículos 7-12, incluye ejemplos prácticos..."
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedSourceIds.size > 0
+                    ? `${selectedSourceIds.size} fuente(s) seleccionada(s)`
+                    : 'Búsqueda automática'}
+                </span>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowProcessWithSourcesModal(false);
+                    setSelectedSourceIds(new Set());
+                    setProcessExtraContext('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={processTopicWithSources}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                >
+                  Procesar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Missing Sources Modal */}
+      {showMissingSourcesModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">📚</span>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    Fuentes normativas necesarias
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {missingSourcesTopic}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[50vh]">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Para procesar este tema necesitas subir los siguientes documentos a la sección de <strong>Fuentes Normativas</strong>:
+              </p>
+              <div className="space-y-3">
+                {missingSources.map((source, index) => (
+                  <div
+                    key={index}
+                    className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-amber-600 dark:text-amber-400 text-lg">📄</span>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                          {source.nombre}
+                        </h3>
+                        <span className="inline-block px-2 py-0.5 text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 rounded mt-1">
+                          {source.tipo}
+                        </span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                          {source.descripcion}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowMissingSourcesModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                >
+                  Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMissingSourcesModal(false);
+                    router.push('/normative-sources');
+                  }}
+                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium"
+                >
+                  Ir a Fuentes Normativas
                 </button>
               </div>
             </div>

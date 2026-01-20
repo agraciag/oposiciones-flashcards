@@ -58,12 +58,13 @@ Siempre citas tus fuentes y nunca inventas información."""
         topic_id: int,
         extra_context: Optional[str] = None,
         use_embeddings: bool = False,
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        source_ids: Optional[List[int]] = None
     ) -> Dict[str, Any]:
         """
         Procesa un tema completo:
         1. Obtiene el tema
-        2. Busca en normativa indexada
+        2. Busca en normativa indexada (o usa fuentes específicas)
         3. Construye prompt con contexto
         4. Genera con Ollama
         5. Guarda resultado y log
@@ -73,6 +74,7 @@ Siempre citas tus fuentes y nunca inventas información."""
             extra_context: Contexto adicional del usuario
             use_embeddings: Si usar búsqueda semántica (futuro)
             temperature: Creatividad del modelo
+            source_ids: IDs de fuentes específicas a usar (si None, busca automáticamente)
 
         Returns:
             Diccionario con resultado del procesamiento
@@ -83,22 +85,30 @@ Siempre citas tus fuentes y nunca inventas información."""
             return self._error_result(topic_id, "Tema no encontrado")
 
         # Log de inicio
-        log = self._create_log(topic_id, "process", "started", {"extra_context": extra_context})
+        log = self._create_log(topic_id, "process", "started", {
+            "extra_context": extra_context,
+            "source_ids": source_ids
+        })
 
         try:
-            # 2. Buscar en normativa
-            search_results = self.search_relevant_sources(
-                topic.title,
-                use_embeddings=use_embeddings
-            )
+            # 2. Buscar en normativa o usar fuentes específicas
+            if source_ids:
+                # Usar fuentes específicas seleccionadas por el usuario
+                search_results = self._get_sources_by_ids(source_ids, topic.title)
+            else:
+                # Búsqueda automática
+                search_results = self.search_relevant_sources(
+                    topic.title,
+                    use_embeddings=use_embeddings
+                )
 
-            if not search_results:
-                # Intentar con búsqueda más amplia
-                keywords = self._extract_keywords(topic.title)
-                for keyword in keywords:
-                    search_results.extend(
-                        self.search_relevant_sources(keyword, limit=3)
-                    )
+                if not search_results:
+                    # Intentar con búsqueda más amplia
+                    keywords = self._extract_keywords(topic.title)
+                    for keyword in keywords:
+                        search_results.extend(
+                            self.search_relevant_sources(keyword, limit=3)
+                        )
 
             # Actualizar log con fuentes encontradas
             self._update_log(log, sources_checked=len(search_results))
@@ -111,15 +121,19 @@ Siempre citas tus fuentes y nunca inventas información."""
             )
 
             if not context.strip():
-                # No se encontró contenido relevante
-                self._update_log(log, "completed", {
-                    "warning": "No se encontró contenido relevante en la normativa"
+                # No se encontró contenido relevante - sugerir qué fuentes se necesitan
+                suggested_sources = await self._suggest_required_sources(topic.title)
+                self._update_log(log, "pending_sources", {
+                    "warning": "No se encontró contenido relevante en la normativa",
+                    "suggested_sources": suggested_sources
                 })
                 return {
                     "success": False,
                     "topic_id": topic_id,
-                    "error": "No se encontró contenido relevante en las fuentes normativas",
-                    "suggestion": "Intenta re-procesar con contexto adicional o palabras clave específicas"
+                    "needs_sources": True,
+                    "error": "No se encontraron fuentes normativas relevantes para este tema",
+                    "suggested_sources": suggested_sources,
+                    "message": "Para procesar este tema, necesitas subir los siguientes documentos:"
                 }
 
             # 4. Construir prompt
@@ -193,6 +207,47 @@ Siempre citas tus fuentes y nunca inventas información."""
             source_type=source_type,
             limit=limit
         )
+
+    def _get_sources_by_ids(
+        self,
+        source_ids: List[int],
+        query: str
+    ) -> List[Dict[str, Any]]:
+        """
+        Obtiene contenido de fuentes específicas por sus IDs.
+
+        Args:
+            source_ids: Lista de IDs de fuentes normativas
+            query: Query para buscar contenido relevante dentro de las fuentes
+
+        Returns:
+            Lista de resultados con excerpts de las fuentes seleccionadas
+        """
+        results = []
+        sources = self.db.query(NormativeSource).filter(
+            NormativeSource.id.in_(source_ids)
+        ).all()
+
+        for source in sources:
+            if not source.full_text:
+                continue
+
+            # Buscar contenido relevante dentro de esta fuente específica
+            excerpt = self._get_extended_context(source.id, query, max_chars=3000)
+
+            if not excerpt:
+                # Si no encontramos el query específico, tomar el inicio del documento
+                excerpt = source.full_text[:3000]
+
+            results.append({
+                "source_id": source.id,
+                "source_name": source.name,
+                "source_code": source.code,
+                "excerpt": excerpt,
+                "relevance_score": 1.0  # Máxima relevancia porque el usuario las seleccionó
+            })
+
+        return results
 
     def extract_relevant_chunks(
         self,
@@ -391,6 +446,49 @@ Siempre citas tus fuentes y nunca inventas información."""
             log.sources_checked = json.dumps({"count": sources_checked})
 
         self.db.commit()
+
+    async def _suggest_required_sources(self, topic_title: str) -> List[Dict[str, str]]:
+        """
+        Usa Ollama para sugerir qué fuentes normativas se necesitan para un tema.
+
+        Args:
+            topic_title: Título del tema
+
+        Returns:
+            Lista de fuentes sugeridas con nombre y descripción
+        """
+        prompt = f"""Eres un experto en oposiciones españolas. Dado el siguiente tema de oposición, indica qué documentos legales/normativos serían necesarios para desarrollarlo correctamente.
+
+TEMA: {topic_title}
+
+Responde SOLO con un JSON array con el siguiente formato (sin explicaciones adicionales):
+[
+    {{"nombre": "Nombre del documento", "tipo": "LEY|REAL_DECRETO|CONSTITUCION|ESTATUTO|REGLAMENTO|ORDEN|DIRECTIVA", "descripcion": "Breve descripción de qué aporta al tema"}}
+]
+
+Incluye solo los documentos más relevantes (máximo 5). Sé específico con los nombres oficiales de las leyes."""
+
+        try:
+            response = await self.ollama.generate(
+                prompt=prompt,
+                system="Eres un asistente que responde únicamente con JSON válido, sin texto adicional.",
+                temperature=0.3
+            )
+
+            # Limpiar respuesta y extraer JSON
+            response = response.strip()
+            # Buscar el array JSON en la respuesta
+            start = response.find('[')
+            end = response.rfind(']') + 1
+            if start != -1 and end > start:
+                json_str = response[start:end]
+                sources = json.loads(json_str)
+                return sources
+
+            return [{"nombre": "No se pudieron determinar las fuentes necesarias", "tipo": "DESCONOCIDO", "descripcion": "Revisa el tema manualmente"}]
+
+        except Exception as e:
+            return [{"nombre": f"Error al sugerir fuentes: {str(e)}", "tipo": "ERROR", "descripcion": "Intenta de nuevo más tarde"}]
 
     def _error_result(self, topic_id: int, error: str) -> Dict[str, Any]:
         """Genera un resultado de error"""

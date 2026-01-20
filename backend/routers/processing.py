@@ -31,6 +31,7 @@ class ProcessRequest(BaseModel):
     extra_context: Optional[str] = None
     use_embeddings: bool = False
     priority: int = 0
+    source_ids: Optional[List[int]] = None  # IDs de fuentes específicas a usar
 
 
 class ProcessAllRequest(BaseModel):
@@ -76,6 +77,30 @@ class OllamaStatusResponse(BaseModel):
     model_available: bool
     models: List[str]
     error: Optional[str] = None
+
+
+# ============================================================================
+# ENDPOINTS - NORMATIVE SOURCES LIST
+# ============================================================================
+
+@router.get("/sources")
+async def list_normative_sources(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Lista todas las fuentes normativas disponibles para procesamiento"""
+    sources = db.query(NormativeSource).order_by(NormativeSource.name).all()
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "code": s.code,
+            "source_type": s.source_type.value if s.source_type else None,
+            "has_text": bool(s.full_text),
+            "text_length": len(s.full_text) if s.full_text else 0
+        }
+        for s in sources
+    ]
 
 
 # ============================================================================
@@ -189,8 +214,13 @@ async def process_topic_sync(
     result = await processor.process_topic(
         topic_id=topic_id,
         extra_context=request.extra_context,
-        use_embeddings=request.use_embeddings
+        use_embeddings=request.use_embeddings,
+        source_ids=request.source_ids
     )
+
+    # Si necesita fuentes, devolver 200 con la información (no error)
+    if result.get("needs_sources"):
+        return result
 
     if not result.get("success"):
         raise HTTPException(
